@@ -1,0 +1,67 @@
+---
+description: Global Project Documentation (to be served as a reference to the agents)
+globs:
+alwaysApply: true
+---
+
+# Guide AI Project Documentation
+
+## Database Schema
+
+Currently using Django's default database configuration with SQLite for development.
+Database URL can be configured via DATABASE_URL environment variable.
+
+### Django Default Tables (managed by Django)
+- auth_user
+- auth_group
+- auth_permission
+- django_admin_log
+- django_content_type
+- django_session
+- django_migrations
+
+### Custom Models
+None implemented yet.
+
+## API Endpoints
+
+### Admin Interface
+- `/admin/` - Django Admin interface (authentication required)
+
+### Custom API Endpoints
+None implemented yet.
+
+## Key Business Logic Rules
+None defined yet. This is a fresh Django project.
+
+## Current Feature Status
+
+### Completed
+- Basic Django project setup (Django 5.2.6)
+- Environment variable support for database configuration
+- Django admin interface enabled
+
+### In Progress
+None
+
+### Planned
+To be defined based on project requirements.
+
+## Known Issues/Constraints
+
+### Configuration
+- DEBUG = True (development mode)
+- SECRET_KEY is hardcoded (needs to be moved to environment variable for production)
+- ALLOWED_HOSTS is empty (needs configuration for production)
+- Default SQLite database (may need PostgreSQL/MySQL for production)
+
+### Security Considerations
+- CSRF middleware enabled
+- Session authentication configured
+- Standard Django password validators in place
+
+## Technical Stack
+- Django 5.2.6
+- Python (version as per system)
+- django-environ for environment variable management
+- SQLite (default database)
