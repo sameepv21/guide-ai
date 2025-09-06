@@ -12,7 +12,6 @@ Currently using Django's default database configuration with SQLite for developm
 Database URL can be configured via DATABASE_URL environment variable.
 
 ### Django Default Tables (managed by Django)
-- auth_user
 - auth_group
 - auth_permission
 - django_admin_log
@@ -21,7 +20,21 @@ Database URL can be configured via DATABASE_URL environment variable.
 - django_migrations
 
 ### Custom Models
-None implemented yet.
+
+#### users.User (replaces default auth_user)
+- `email` - EmailField, unique, max_length=255 (PRIMARY LOGIN FIELD)
+- `first_name` - CharField, max_length=30, blank=True
+- `last_name` - CharField, max_length=30, blank=True
+- `is_active` - BooleanField, default=True
+- `is_staff` - BooleanField, default=False
+- `is_superuser` - BooleanField (from PermissionsMixin)
+- `date_joined` - DateTimeField, auto_now_add=True
+- `last_login` - DateTimeField (from AbstractBaseUser)
+- `password` - CharField (from AbstractBaseUser)
+- `groups` - ManyToMany to auth.Group (from PermissionsMixin)
+- `user_permissions` - ManyToMany to auth.Permission (from PermissionsMixin)
+
+**Note**: Username field has been removed. Authentication is email-only.
 
 ## API Endpoints
 
@@ -40,6 +53,9 @@ None defined yet. This is a fresh Django project.
 - Basic Django project setup (Django 5.2.6)
 - Environment variable support for database configuration
 - Django admin interface enabled
+- Custom User model with email-only authentication
+- Email backend for case-insensitive authentication
+- Admin interface configured for email-based User model
 
 ### In Progress
 None
@@ -59,6 +75,8 @@ To be defined based on project requirements.
 - CSRF middleware enabled
 - Session authentication configured
 - Standard Django password validators in place
+- Custom authentication backend (EmailBackend) for email-only login
+- AUTH_USER_MODEL set to 'users.User'
 
 ## Technical Stack
 - Django 5.2.6
