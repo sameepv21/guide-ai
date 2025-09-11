@@ -1,0 +1,85 @@
+---
+description: Global Project Documentation (to be served as a reference to the agents)
+globs:
+alwaysApply: true
+---
+
+# Guide AI Project Documentation
+
+## Database Schema
+
+Currently using Django's default database configuration with SQLite for development.
+Database URL can be configured via DATABASE_URL environment variable.
+
+### Django Default Tables (managed by Django)
+- auth_group
+- auth_permission
+- django_admin_log
+- django_content_type
+- django_session
+- django_migrations
+
+### Custom Models
+
+#### users.User (replaces default auth_user)
+- `email` - EmailField, unique, max_length=255 (PRIMARY LOGIN FIELD)
+- `first_name` - CharField, max_length=30, blank=True
+- `last_name` - CharField, max_length=30, blank=True
+- `is_active` - BooleanField, default=True
+- `is_staff` - BooleanField, default=False
+- `is_superuser` - BooleanField (from PermissionsMixin)
+- `date_joined` - DateTimeField, auto_now_add=True
+- `last_login` - DateTimeField (from AbstractBaseUser)
+- `password` - CharField (from AbstractBaseUser)
+- `groups` - ManyToMany to auth.Group (from PermissionsMixin)
+- `user_permissions` - ManyToMany to auth.Permission (from PermissionsMixin)
+
+**Note**: Username field has been removed. Authentication is email-only.
+
+## API Endpoints
+
+### Admin Interface
+- `/admin/` - Django Admin interface (authentication required)
+
+### Custom API Endpoints
+None implemented yet.
+
+## Key Business Logic Rules
+None defined yet. This is a fresh Django project.
+
+## Current Feature Status
+
+### Completed
+- Basic Django project setup (Django 5.2.6)
+- Environment variable support for database configuration
+- Django admin interface enabled
+- Custom User model with email-only authentication
+- Email backend for case-insensitive authentication
+- Admin interface configured for email-based User model
+
+### In Progress
+None
+
+### Planned
+To be defined based on project requirements.
+
+## Known Issues/Constraints
+
+### Configuration
+- DEBUG = True (development mode)
+- SECRET_KEY is hardcoded (needs to be moved to environment variable for production)
+- ALLOWED_HOSTS is empty (needs configuration for production)
+- Default SQLite database (may need PostgreSQL/MySQL for production)
+
+### Security Considerations
+- CSRF middleware enabled
+- Session authentication configured
+- Standard Django password validators in place
+- Custom authentication backend (EmailBackend) for email-only login
+- AUTH_USER_MODEL set to 'users.User'
+
+## Technical Stack
+- Django 5.2.6
+- Python (version as per system)
+- django-environ for environment variable management
+- SQLite (default database)
