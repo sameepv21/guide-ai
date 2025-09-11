@@ -47,6 +47,41 @@ None implemented yet.
 ## Key Business Logic Rules
 None defined yet. This is a fresh Django project.
 
+## Frontend Architecture
+
+### Technology Stack
+- React 19.1.1 with TypeScript
+- Vite as build tool
+- Tailwind CSS 4.1.13 for styling
+- Framer Motion for animations
+- React Router DOM for navigation
+- React Hook Form for form handling
+- Lucide React for icons
+
+### Component Structure
+
+#### Authentication Components (`/apps/web/src/components/Auth/`)
+- `Login.tsx` - Login page with email/password authentication
+- `Signup.tsx` - User registration with first name, last name, email, and password
+- `ForgotPassword.tsx` - Password reset functionality
+
+#### Chat Components (`/apps/web/src/components/Chat/`)
+- `ChatInterface.tsx` - Main chat interface with video upload/URL input
+- `MessageList.tsx` - Displays conversation history in sidebar
+- `VideoInput.tsx` - Handles video file upload or URL input
+- `ResponseTabs.tsx` - Tabbed interface for displaying:
+  - Response: AI-generated answer
+  - Reasoning: Analysis process explanation
+  - Key Frames: Relevant video frames with timestamps
+  - Timestamps: Clickable time segments with descriptions
+
+### Design System
+- Dark theme with gradient backgrounds (gray-950 to gray-900)
+- Glass morphism effects with backdrop blur
+- Purple and blue accent colors for interactive elements
+- Smooth animations using Framer Motion
+- Responsive layout optimized for desktop
+
 ## Current Feature Status
 
 ### Completed
@@ -56,12 +91,23 @@ None defined yet. This is a fresh Django project.
 - Custom User model with email-only authentication
 - Email backend for case-insensitive authentication
 - Admin interface configured for email-based User model
+- Complete React frontend with TypeScript
+- Authentication UI (Login, Signup, Forgot Password)
+- ChatGPT-like interface for video Q&A
+- Video upload and URL input functionality
+- Tabbed response display with reasoning, frames, and timestamps
+- Dark theme with modern animations
 
 ### In Progress
-None
+- Backend API integration pending
+- Video processing pipeline
+- RAG system implementation
 
 ### Planned
-To be defined based on project requirements.
+- WebSocket support for real-time processing updates
+- Video streaming capabilities
+- Multi-language support
+- Mobile responsive design
 
 ## Known Issues/Constraints
 
@@ -79,7 +125,19 @@ To be defined based on project requirements.
 - AUTH_USER_MODEL set to 'users.User'
 
 ## Technical Stack
+
+### Backend
 - Django 5.2.6
 - Python (version as per system)
 - django-environ for environment variable management
 - SQLite (default database)
+
+### Frontend
+- React 19.1.1
+- TypeScript 5.8.3
+- Vite 7.1.2 (build tool)
+- Tailwind CSS 4.1.13
+- Framer Motion (animations)
+- React Router DOM (routing)
+- React Hook Form (form handling)
+- Lucide React (icons)

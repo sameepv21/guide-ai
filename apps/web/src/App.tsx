@@ -1,10 +1,45 @@
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useState } from 'react';
+import Login from './components/Auth/Login';
+import Signup from './components/Auth/Signup';
+import ForgotPassword from './components/Auth/ForgotPassword';
+import ChatInterface from './components/Chat/ChatInterface';
+
 export default function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
   return (
-    <main className="min-h-screen grid place-items-center bg-gray-50">
-      <div className="rounded-2xl border p-8 shadow-sm bg-white">
-        <h1 className="text-3xl font-bold">Guide AI</h1>
-        <p className="mt-2 text-gray-600">React + TS + Tailwind + Django</p>
+    <Router>
+      <div className="min-h-screen bg-gray-950 text-gray-100">
+        <Routes>
+          <Route 
+            path="/login" 
+            element={
+              isAuthenticated ? 
+              <Navigate to="/chat" /> : 
+              <Login setIsAuthenticated={setIsAuthenticated} />
+            } 
+          />
+          <Route 
+            path="/signup" 
+            element={
+              isAuthenticated ? 
+              <Navigate to="/chat" /> : 
+              <Signup setIsAuthenticated={setIsAuthenticated} />
+            } 
+          />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route 
+            path="/chat" 
+            element={
+              isAuthenticated ? 
+              <ChatInterface setIsAuthenticated={setIsAuthenticated} /> : 
+              <Navigate to="/login" />
+            } 
+          />
+          <Route path="/" element={<Navigate to="/login" />} />
+        </Routes>
       </div>
-    </main>
+    </Router>
   );
 }

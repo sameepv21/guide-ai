@@ -1,69 +1,88 @@
-# React + TypeScript + Vite
+# Guide AI Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+An application for video-guided question answering system with RAG capabilities and reasoning outputs
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Authentication System**
+  - Login with email/password
+  - User registration 
+  - Password reset functionality
 
-## Expanding the ESLint configuration
+- **Video Analysis Interface**
+  - Upload video files directly
+  - Input video URLs (YouTube, Vimeo, etc.)
+  - ChatGPT-like conversation interface
+  - Real-time processing feedback
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **Response Display**
+  - Tabbed interface with multiple views:
+    - Main response
+    - Analysis reasoning
+    - Key video frames with timestamps
+    - Interactive timestamp segments
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Getting Started
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+### Prerequisites
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Make sure you have the conda environment activated:
+```bash
+conda activate guide-ai
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Installation
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Dependencies are already installed. If you need to reinstall:
+```bash
+npm install
 ```
+
+### Running the Application
+
+Start the development server:
+```bash
+npm run dev
+```
+
+The application will be available at `http://localhost:5173`
+
+### Building for Production
+
+```bash
+npm run build
+```
+
+## Project Structure
+
+```
+src/
+├── components/
+│   ├── Auth/
+│   │   ├── Login.tsx
+│   │   ├── Signup.tsx
+│   │   └── ForgotPassword.tsx
+│   └── Chat/
+│       ├── ChatInterface.tsx
+│       ├── MessageList.tsx
+│       ├── VideoInput.tsx
+│       └── ResponseTabs.tsx
+├── App.tsx
+├── main.tsx
+└── index.css
+```
+
+## Tech Stack
+
+- React 19.1.1
+- TypeScript
+- Vite
+- Tailwind CSS
+- Framer Motion
+- React Router DOM
+- React Hook Form
+- Lucide React Icons
+
+## Note
+
+The frontend is currently not connected to the backend API. All interactions are simulated with mock data for demonstration purposes.
