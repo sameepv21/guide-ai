@@ -1,0 +1,143 @@
+---
+description: Global Project Documentation (to be served as a reference to the agents)
+globs:
+alwaysApply: true
+---
+
+# Guide AI Project Documentation
+
+## Database Schema
+
+Currently using Django's default database configuration with SQLite for development.
+Database URL can be configured via DATABASE_URL environment variable.
+
+### Django Default Tables (managed by Django)
+- auth_group
+- auth_permission
+- django_admin_log
+- django_content_type
+- django_session
+- django_migrations
+
+### Custom Models
+
+#### users.User (replaces default auth_user)
+- `email` - EmailField, unique, max_length=255 (PRIMARY LOGIN FIELD)
+- `first_name` - CharField, max_length=30, blank=True
+- `last_name` - CharField, max_length=30, blank=True
+- `is_active` - BooleanField, default=True
+- `is_staff` - BooleanField, default=False
+- `is_superuser` - BooleanField (from PermissionsMixin)
+- `date_joined` - DateTimeField, auto_now_add=True
+- `last_login` - DateTimeField (from AbstractBaseUser)
+- `password` - CharField (from AbstractBaseUser)
+- `groups` - ManyToMany to auth.Group (from PermissionsMixin)
+- `user_permissions` - ManyToMany to auth.Permission (from PermissionsMixin)
+
+**Note**: Username field has been removed. Authentication is email-only.
+
+## API Endpoints
+
+### Admin Interface
+- `/admin/` - Django Admin interface (authentication required)
+
+### Custom API Endpoints
+None implemented yet.
+
+## Key Business Logic Rules
+None defined yet. This is a fresh Django project.
+
+## Frontend Architecture
+
+### Technology Stack
+- React 19.1.1 with TypeScript
+- Vite as build tool
+- Tailwind CSS 4.1.13 for styling
+- Framer Motion for animations
+- React Router DOM for navigation
+- React Hook Form for form handling
+- Lucide React for icons
+
+### Component Structure
+
+#### Authentication Components (`/apps/web/src/components/Auth/`)
+- `Login.tsx` - Login page with email/password authentication
+- `Signup.tsx` - User registration with first name, last name, email, and password
+- `ForgotPassword.tsx` - Password reset functionality
+
+#### Chat Components (`/apps/web/src/components/Chat/`)
+- `ChatInterface.tsx` - Main chat interface with video upload/URL input
+- `MessageList.tsx` - Displays conversation history in sidebar
+- `VideoInput.tsx` - Handles video file upload or URL input
+- `ResponseTabs.tsx` - Tabbed interface for displaying:
+  - Response: AI-generated answer
+  - Reasoning: Analysis process explanation
+  - Key Frames: Relevant video frames with timestamps
+  - Timestamps: Clickable time segments with descriptions
+
+### Design System
+- Dark theme with gradient backgrounds (gray-950 to gray-900)
+- Glass morphism effects with backdrop blur
+- Purple and blue accent colors for interactive elements
+- Smooth animations using Framer Motion
+- Responsive layout optimized for desktop
+
+## Current Feature Status
+
+### Completed
+- Basic Django project setup (Django 5.2.6)
+- Environment variable support for database configuration
+- Django admin interface enabled
+- Custom User model with email-only authentication
+- Email backend for case-insensitive authentication
+- Admin interface configured for email-based User model
+- Complete React frontend with TypeScript
+- Authentication UI (Login, Signup, Forgot Password)
+- ChatGPT-like interface for video Q&A
+- Video upload and URL input functionality
+- Tabbed response display with reasoning, frames, and timestamps
+- Dark theme with modern animations
+
+### In Progress
+- Backend API integration pending
+- Video processing pipeline
+- RAG system implementation
+
+### Planned
+- WebSocket support for real-time processing updates
+- Video streaming capabilities
+- Multi-language support
+- Mobile responsive design
+
+## Known Issues/Constraints
+
+### Configuration
+- DEBUG = True (development mode)
+- SECRET_KEY is hardcoded (needs to be moved to environment variable for production)
+- ALLOWED_HOSTS is empty (needs configuration for production)
+- Default SQLite database (may need PostgreSQL/MySQL for production)
+
+### Security Considerations
+- CSRF middleware enabled
+- Session authentication configured
+- Standard Django password validators in place
+- Custom authentication backend (EmailBackend) for email-only login
+- AUTH_USER_MODEL set to 'users.User'
+
+## Technical Stack
+
+### Backend
+- Django 5.2.6
+- Python (version as per system)
+- django-environ for environment variable management
+- SQLite (default database)
+
+### Frontend
+- React 19.1.1
+- TypeScript 5.8.3
+- Vite 7.1.2 (build tool)
+- Tailwind CSS 4.1.13
+- Framer Motion (animations)
+- React Router DOM (routing)
+- React Hook Form (form handling)
+- Lucide React (icons)

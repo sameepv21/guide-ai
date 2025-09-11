@@ -1,0 +1,28 @@
+---
+description: Rules for python
+globs: *.py
+alwaysApply: false
+---
+
+# Your rule content
+
+- IMPORTANT! Do not do any error handling! Do not add try-except statements!!!
+- Do not create fallback error handling. Do not anticipate errors and handle them. Avoid any error handling!!
+- You can use markdown but dont have to
+- Do not delete comments or #TODO's if you're not deleting the whole function/file/class.
+- Tests are written using pytest format and within the same file as the code they are testing with a ####    TESTS    #### header comment.
+- When importing python datetime, do: `import datetime as dt` and then use `dt.datetime`, `dt.date`, `dt.time` etc.
+- If tests are failing because django not active, add `@pytest.mark.django_db` - only if 100% sure it's needed.
+- When writing tests, DO NOT import pytest if not using it.
+- Add new Python package requirements to [base.txt](mdc:requirements/base.txt)
+- Don't write documentation for every function, unless explicitly instructed to
+- After writing a test, run `pytest backend/...` to test it. Don't `cd backend`.
+- Always adhere to DRY (don't repeat yourself) and KISS (keep it simple stupid) coding principles. NEVER DUPLICATE CODE. 
+- Do not write more code than the code necessary to serve the request from the user.
+- Always optimize for minimal code changes necessary to serve the request from the user.
+- Never run Django migrations yourself. Create migration if necessary, but do not run `./manage.py migrate` without permission.
+- To activate venv: `source .venv/bin/activate`
+- For Django server inside `backend/` (almost all the codebase), DO NOT import from `backend/`, import from app inside `backend/`. So don't start imports with `backend.`
+- After a big task, CLEAN UP. 1. Clean up your imports. Should be at top of module. Remove unused imports. 2. Identify lines of repeated code that should potentially be a function - if extracting function is obvious, do so.
+- Imports are in 4 groups: std lib, 3rd party lib, django, internal code (including jobs/, utils/, users/, cases/, watchlists/, instructions/, contrib/, checks/)
+- Don't start the server unless instructed to; the user is already running the server.
