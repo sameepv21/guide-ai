@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, Link2, Send, Video, LogOut, Sparkles, Clock, Frame, Brain } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Send, Video, LogOut, Sparkles } from 'lucide-react';
 import MessageList from './MessageList';
 import VideoInput from './VideoInput';
 import ResponseTabs from './ResponseTabs';
+
 
 interface ChatInterfaceProps {
   setIsAuthenticated: (value: boolean) => void;

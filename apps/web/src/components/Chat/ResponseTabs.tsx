@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, Brain, Frame, Clock, Play } from 'lucide-react';
-import { Message } from './ChatInterface';
+import type { Message } from './ChatInterface';
 
 interface ResponseTabsProps {
   message: Message;

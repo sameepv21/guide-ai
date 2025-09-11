@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Video, Link2, MessageSquare } from 'lucide-react';
-import { Message } from './ChatInterface';
+import type { Message } from './ChatInterface';
 
 interface MessageListProps {
   messages: Message[];
