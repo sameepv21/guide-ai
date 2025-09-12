@@ -26,3 +26,6 @@ alwaysApply: false
 - After a big task, CLEAN UP. 1. Clean up your imports. Should be at top of module. Remove unused imports. 2. Identify lines of repeated code that should potentially be a function - if extracting function is obvious, do so.
 - Imports are in 4 groups: std lib, 3rd party lib, django, internal code (including jobs/, utils/, users/, cases/, watchlists/, instructions/, contrib/, checks/)
 - Don't start the server unless instructed to; the user is already running the server.
+- With any big features and upgrades in the repo. You should also update the guideai.mdc iin .cursor/rules.
+- Note that in the update, you should also take care of the fact that there might be some old stuff as well that does not have any connection with the current system.
+- You should just remove those and just keep the file updated to represent the current entire repo structure. This is of prime importance.

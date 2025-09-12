@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, User } from 'lucide-react';
 import { useForm } from 'react-hook-form';
+import { authAPI } from '../../services/api';
 
 interface SignupProps {
   setIsAuthenticated: (value: boolean) => void;
@@ -19,11 +20,32 @@ interface SignupForm {
 export default function Signup({ setIsAuthenticated }: SignupProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [error, setError] = useState('');
   const { register, handleSubmit } = useForm<SignupForm>();
 
   const onSubmit = (data: SignupForm) => {
-    console.log('Signup data:', data);
-    setIsAuthenticated(true);
+    if (data.password !== data.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+    
+    setError('');
+    authAPI.signup(data.email, data.password, data.firstName, data.lastName)
+      .then(() => {
+        return authAPI.login(data.email, data.password);
+      })
+      .then(() => {
+        setIsAuthenticated(true);
+      })
+      .catch((err) => {
+        if (err.response?.status === 400) {
+          setError(err.response?.data?.error || 'Email already exists');
+        } else if (err.response?.status >= 500) {
+          setError('Server error. Please try again later');
+        } else {
+          setError('Unable to sign up. Please check your connection');
+        }
+      });
   };
 
   return (
@@ -158,6 +180,16 @@ export default function Signup({ setIsAuthenticated }: SignupProps) {
                 </button>
               </div>
             </motion.div>
+
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm"
+              >
+                {error}
+              </motion.div>
+            )}
 
             <motion.button
               initial={{ opacity: 0, y: 20 }}

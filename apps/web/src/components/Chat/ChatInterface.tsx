@@ -4,6 +4,7 @@ import { Send, Video, LogOut, Sparkles } from 'lucide-react';
 import MessageList from './MessageList';
 import VideoInput from './VideoInput';
 import ResponseTabs from './ResponseTabs';
+import { videoAPI } from '../../services/api';
 
 
 interface ChatInterfaceProps {
@@ -41,6 +42,7 @@ export default function ChatInterface({ setIsAuthenticated }: ChatInterfaceProps
   const [inputType, setInputType] = useState<'upload' | 'url'>('upload');
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
+  const [error, setError] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,55 +62,40 @@ export default function ChatInterface({ setIsAuthenticated }: ChatInterfaceProps
     setMessages(prev => [...prev, userMessage]);
     setQuery('');
     setIsProcessing(true);
+    setError('');
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: `Based on the video analysis, here's what I found regarding "${query}". The relevant information appears at timestamp 2:35 where the concept is clearly explained. The video demonstrates this through visual examples and provides detailed context.`,
-        timestamp: new Date(),
-        reasoning: 'I analyzed the video content frame by frame, extracted audio transcripts, and identified key visual elements. The query was matched against both visual and textual content to find the most relevant segments.',
-        frames: [
-          {
-            timestamp: '0:45',
-            frame: '/api/placeholder/320/180',
-            description: 'Introduction to the concept'
-          },
-          {
-            timestamp: '2:35',
-            frame: '/api/placeholder/320/180',
-            description: 'Main explanation with visual demonstration'
-          },
-          {
-            timestamp: '5:12',
-            frame: '/api/placeholder/320/180',
-            description: 'Practical example and application'
-          }
-        ],
-        timestamps: [
-          {
-            start: '0:45',
-            end: '1:30',
-            content: 'Introduction and context setting'
-          },
-          {
-            start: '2:35',
-            end: '4:20',
-            content: 'Core explanation and demonstration'
-          },
-          {
-            start: '5:12',
-            end: '6:45',
-            content: 'Practical examples and summary'
-          }
-        ]
-      };
-
-      setMessages(prev => [...prev, aiMessage]);
-      setSelectedMessage(aiMessage);
-      setIsProcessing(false);
-    }, 2000);
+    const videoUrlToProcess = inputType === 'url' ? videoUrl : (videoFile ? URL.createObjectURL(videoFile) : '');
+    
+    videoAPI.processVideo(videoUrlToProcess, query)
+      .then(response => {
+        const aiMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: response.data.response,
+          timestamp: new Date(),
+          reasoning: response.data.reasoning,
+          frames: response.data.keyFrames,
+          timestamps: response.data.timestamps.map((ts: { time: string; description: string }) => ({
+            start: ts.time.split(' - ')[0],
+            end: ts.time.split(' - ')[1],
+            content: ts.description
+          }))
+        };
+        setMessages(prev => [...prev, aiMessage]);
+        setSelectedMessage(aiMessage);
+        setIsProcessing(false);
+      })
+      .catch(err => {
+        setIsProcessing(false);
+        if (err.response?.status === 401) {
+          setError('Your session has expired. Please login again');
+          setTimeout(() => setIsAuthenticated(false), 2000);
+        } else if (err.response?.status >= 500) {
+          setError('Server error. Please try again later');
+        } else {
+          setError('Failed to process video. Please check your connection and try again');
+        }
+      });
   };
 
   const handleLogout = () => {
@@ -195,6 +182,16 @@ export default function ChatInterface({ setIsAuthenticated }: ChatInterfaceProps
           animate={{ y: 0, opacity: 1 }}
           className="bg-gray-900/50 backdrop-blur-xl border-t border-gray-800 p-6"
         >
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm"
+            >
+              {error}
+            </motion.div>
+          )}
+          
           <VideoInput
             inputType={inputType}
             setInputType={setInputType}

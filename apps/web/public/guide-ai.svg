@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="guideGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3B82F6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="40" fill="url(#guideGradient)"/>
+  <g transform="translate(128, 128)">
+    <!-- Letter G stylized -->
+    <path d="M -50 -30 Q -50 -60, -20 -60 L 20 -60 Q 50 -60, 50 -30 L 50 0 L 20 0 L 20 -30 L -20 -30 L -20 30 Q -20 60, 10 60 L 50 60 L 50 30 L 20 30" 
+          fill="none" 
+          stroke="white" 
+          stroke-width="16" 
+          stroke-linecap="round" 
+          stroke-linejoin="round"/>
+    <!-- AI dot representing intelligence -->
+    <circle cx="0" cy="0" r="8" fill="white"/>
+  </g>
+</svg>
