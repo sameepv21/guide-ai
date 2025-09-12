@@ -36,16 +36,32 @@ Database URL can be configured via DATABASE_URL environment variable.
 
 **Note**: Username field has been removed. Authentication is email-only.
 
+#### videos.Video
+- `video_path` - CharField, max_length=500
+- `title` - CharField, max_length=255, blank=True
+- `uploaded_by` - ForeignKey to users.User, CASCADE
+- `uploaded_at` - DateTimeField, auto_now_add=True
+
+#### videos.VideoChat
+- `video` - ForeignKey to Video, PROTECT
+- `user` - ForeignKey to users.User, CASCADE
+- `chat_history` - JSONField, default=list
+- `created_at` - DateTimeField, auto_now_add=True
+- `updated_at` - DateTimeField, auto_now=True
+
 ## API Endpoints
 
 ### Admin Interface
 - `/admin/` - Django Admin interface (authentication required)
 
-### Custom API Endpoints
-None implemented yet.
+### Authentication API Endpoints
+- `POST /api/auth/login/` - User login with email/password
+- `POST /api/auth/signup/` - User registration
+- `POST /api/auth/logout/` - User logout
 
-## Key Business Logic Rules
-None defined yet. This is a fresh Django project.
+### Video Processing API Endpoints
+- `POST /api/videos/process/` - Process video and query with chat session support, returns template response
+- `GET /api/videos/history/` - Get user's chat history
 
 ## Frontend Architecture
 
@@ -57,50 +73,61 @@ None defined yet. This is a fresh Django project.
 - React Router DOM for navigation
 - React Hook Form for form handling
 - Lucide React for icons
+- Axios for API communication
 
 ### Component Structure
 
 #### Authentication Components (`/apps/web/src/components/Auth/`)
-- `Login.tsx` - Login page with email/password authentication
-- `Signup.tsx` - User registration with first name, last name, email, and password
-- `ForgotPassword.tsx` - Password reset functionality
+- `Login.tsx` - Login page with email/password authentication and error handling
+- `Signup.tsx` - User registration with validation and error handling
+- `ForgotPassword.tsx` - Password reset functionality (not implemented)
 
 #### Chat Components (`/apps/web/src/components/Chat/`)
-- `ChatInterface.tsx` - Main chat interface with video upload/URL input
+- `ChatInterface.tsx` - Main chat interface with:
+  - Video upload/URL input and error handling
+  - New Chat button to start fresh conversations
+  - Chat history viewer with clickable previous chats
+  - Session persistence and chat continuity
 - `MessageList.tsx` - Displays conversation history in sidebar
 - `VideoInput.tsx` - Handles video file upload or URL input
 - `ResponseTabs.tsx` - Tabbed interface for displaying:
-  - Response: AI-generated answer
+  - Response: AI-generated answer from backend
   - Reasoning: Analysis process explanation
   - Key Frames: Relevant video frames with timestamps
   - Timestamps: Clickable time segments with descriptions
+
+#### API Service (`/apps/web/src/services/`)
+- `api.ts` - Centralized API service using axios for backend communication
 
 ### Design System
 - Dark theme with gradient backgrounds (gray-950 to gray-900)
 - Glass morphism effects with backdrop blur
 - Purple and blue accent colors for interactive elements
 - Smooth animations using Framer Motion
-- Responsive layout optimized for desktop
+- Error messages in red with semi-transparent backgrounds
 
 ## Current Feature Status
 
 ### Completed
 - Basic Django project setup (Django 5.2.6)
-- Environment variable support for database configuration
-- Django admin interface enabled
+- Django REST Framework integration
+- CORS configuration for frontend-backend communication
 - Custom User model with email-only authentication
-- Email backend for case-insensitive authentication
-- Admin interface configured for email-based User model
-- Complete React frontend with TypeScript
-- Authentication UI (Login, Signup, Forgot Password)
-- ChatGPT-like interface for video Q&A
-- Video upload and URL input functionality
-- Tabbed response display with reasoning, frames, and timestamps
-- Dark theme with modern animations
+- Authentication API endpoints (login, signup, logout)
+- Video processing API endpoint with template responses and chat session support
+- Session-based authentication with localStorage persistence
+- Frontend-backend integration with axios
+- Error handling for authentication and video processing
+- User feedback for 4XX and 5XX errors
+- Video deduplication (same video URL not duplicated in database)
+- Chat session management (continuous chat without creating new video entries)
+- Chat history tracking for users
+- Interactive chat history viewer with ability to load previous conversations
+- New Chat button to start fresh conversations
+- Visual indicator showing number of previous chats
 
 ### In Progress
-- Backend API integration pending
-- Video processing pipeline
+- Video processing pipeline implementation
 - RAG system implementation
 
 ### Planned
@@ -108,6 +135,7 @@ None defined yet. This is a fresh Django project.
 - Video streaming capabilities
 - Multi-language support
 - Mobile responsive design
+- Actual video analysis (currently returns template responses)
 
 ## Known Issues/Constraints
 
@@ -116,20 +144,25 @@ None defined yet. This is a fresh Django project.
 - SECRET_KEY is hardcoded (needs to be moved to environment variable for production)
 - ALLOWED_HOSTS is empty (needs configuration for production)
 - Default SQLite database (may need PostgreSQL/MySQL for production)
+- Frontend runs on port 3000, backend on port 8000
+- Video processing returns template responses (actual implementation pending)
 
 ### Security Considerations
-- CSRF middleware enabled
+- CSRF protection enabled with trusted origins
 - Session authentication configured
 - Standard Django password validators in place
 - Custom authentication backend (EmailBackend) for email-only login
 - AUTH_USER_MODEL set to 'users.User'
+- CORS configured for localhost:3000
 
 ## Technical Stack
 
 ### Backend
 - Django 5.2.6
+- Django REST Framework 3.15.2
+- django-cors-headers 4.7.0
+- django-environ 0.12.0
 - Python (version as per system)
-- django-environ for environment variable management
 - SQLite (default database)
 
 ### Frontend
@@ -141,3 +174,19 @@ None defined yet. This is a fresh Django project.
 - React Router DOM (routing)
 - React Hook Form (form handling)
 - Lucide React (icons)
+- Axios (HTTP client)
+
+## Error Handling
+
+### Frontend Error Handling
+- Login errors: Invalid credentials, server errors, connection issues
+- Signup errors: Email exists, password mismatch, validation errors
+- Video processing errors: Session expiry, server errors, connection issues, invalid URL format
+- URL validation: Client-side and server-side validation for video URLs
+- User-friendly error messages displayed in UI
+- Automatic logout on session expiry (401 errors)
+
+### Backend Response Format
+- Success responses include data and appropriate status codes
+- Error responses handled by Django REST Framework
+- Template responses for video processing (to be replaced with actual implementation)

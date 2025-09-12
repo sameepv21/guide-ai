@@ -1,12 +1,18 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Login from './components/Auth/Login';
 import Signup from './components/Auth/Signup';
 import ForgotPassword from './components/Auth/ForgotPassword';
 import ChatInterface from './components/Chat/ChatInterface';
 
 export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return localStorage.getItem('isAuthenticated') === 'true';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('isAuthenticated', isAuthenticated.toString());
+  }, [isAuthenticated]);
 
   return (
     <Router>

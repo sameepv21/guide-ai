@@ -13,6 +13,7 @@ class Video(models.Model):
 
 class VideoChat(models.Model):
     video = models.ForeignKey(Video, on_delete=models.PROTECT, related_name='chats')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='video_chats', null=True)
     chat_history = models.JSONField(default=list)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

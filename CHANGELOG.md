@@ -1,0 +1,191 @@
+# Guide AI - Change Log
+
+## Session: September 12, 2025
+
+### Overview
+Fixed 4 major issues related to video duplication, chat session management, session persistence, and chat history accessibility. Additionally, implemented URL validation and TypeScript type safety improvements.
+
+---
+
+## Changes Made
+
+### 1. Video Deduplication & Smart Session Management
+
+#### What Changed:
+- **Backend (`videos/views.py`)**: Modified `process_video` to check if video with same URL already exists for user
+- **Backend (`videos/models.py`)**: Added `user` field to `VideoChat` model to track chat ownership
+- **Frontend (`ChatInterface.tsx`)**: Added chat session tracking with `currentChatId` and `currentVideoUrl` states
+
+#### Why Changed:
+- Previously, uploading the same video or pasting the same URL created duplicate database entries
+- No way to continue conversations without creating new video entries
+- Database would grow unnecessarily with redundant data
+
+#### Result:
+- Videos are now reused when same URL is processed by same user
+- Continuing a conversation appends to existing chat history instead of creating new entries
+- Database remains efficient with no duplicate videos
+
+---
+
+### 2. Session Persistence
+
+#### What Changed:
+- **Frontend (`App.tsx`)**: Added localStorage to persist authentication state
+- **Frontend (`ChatInterface.tsx`)**: Added localStorage cleanup on logout
+
+#### Why Changed:
+- Users were required to login again every time they opened the website
+- Session state was only kept in memory, lost on page refresh
+
+#### Result:
+- Users remain logged in across page refreshes and browser sessions
+- Logout properly clears stored session data
+- Better user experience with persistent authentication
+
+---
+
+### 3. Chat History Accessibility
+
+#### What Changed:
+- **Backend (`videos/views.py`)**: Created new `get_chat_history` endpoint returning user's chat history
+- **Backend (`videos/urls.py`)**: Added route for `/api/videos/history/`
+- **Frontend (`ChatInterface.tsx`)**: 
+  - Added "View previous chats" clickable button showing chat count
+  - Implemented chat history viewer with list of previous conversations
+  - Added `loadPreviousChat` function to restore full conversations
+- **Frontend (`api.ts`)**: Added `getChatHistory` API method
+
+#### Why Changed:
+- "You have previous chats" was just plain text, not actionable
+- No way to access or view previous conversations
+- Users couldn't continue old chats or reference past discussions
+
+#### Result:
+- Clickable button shows number of previous chats
+- Full chat history viewer displays all past conversations with metadata
+- Users can click any previous chat to load and continue it
+- Seamless switching between different chat sessions
+
+---
+
+### 4. New Chat Functionality
+
+#### What Changed:
+- **Frontend (`ChatInterface.tsx`)**: Added "New Chat" button with `handleNewChat` function
+- Clears all conversation state and resets to fresh session
+
+#### Why Changed:
+- No way to start a fresh conversation without reloading the page
+- Users needed ability to start new topics without losing history
+
+#### Result:
+- Prominent "New Chat" button in sidebar
+- Cleanly starts new conversation while preserving all history
+- Refreshes chat history list after creating new chat
+
+---
+
+### 5. UI/UX Improvements
+
+#### What Changed:
+- **Frontend (`ChatInterface.tsx`)**: Added `cursor-pointer` class to all clickable elements
+- Fixed cursor display on buttons and interactive elements
+
+#### Why Changed:
+- Clickable elements didn't show hand cursor on hover
+- Poor visual feedback for interactive elements
+
+#### Result:
+- All buttons and clickable items show proper hand cursor
+- Better user experience with clear visual affordances
+
+---
+
+### 6. TypeScript Type Safety
+
+#### What Changed:
+- **Frontend (`ChatInterface.tsx`)**: 
+  - Created `ChatHistoryItem` interface with proper typing
+  - Changed `currentChatId` from `number | null` to `number | undefined`
+  - Removed all `any` type usage
+
+#### Why Changed:
+- TypeScript errors with type mismatches
+- Using `any` defeats purpose of TypeScript
+- API expected `undefined` not `null` for optional parameters
+
+#### Result:
+- Full type safety throughout the component
+- No TypeScript errors or warnings
+- Better IDE support and error prevention
+
+---
+
+### 7. URL Validation
+
+#### What Changed:
+- **Backend (`videos/views.py`)**: Added regex pattern validation for URLs
+- **Frontend (`ChatInterface.tsx`)**: 
+  - Added client-side URL format validation
+  - Enhanced error handling for 400 status codes
+
+#### Why Changed:
+- No validation for URL format could cause errors downstream
+- Users could submit invalid URLs that would fail processing
+- Poor error messages didn't help users understand the problem
+
+#### Result:
+- Two-layer validation (client and server) for reliability
+- Clear error messages guide users to correct format
+- URLs must start with http:// or https://
+- Prevents invalid data from entering the system
+
+---
+
+### 8. Database Migration
+
+#### What Changed:
+- **Backend (`videos/models.py`)**: Made `user` field nullable to handle existing data
+- Created migration file `0002_videochat_user.py`
+
+#### Why Changed:
+- Adding required field to existing model needed migration
+- Existing VideoChat records (if any) needed default handling
+
+#### Result:
+- Clean migration path for database schema update
+- Existing data preserved with null user values
+- New chats always have user association
+
+---
+
+## Technical Summary
+
+### Files Modified:
+- **Backend**: `videos/models.py`, `videos/views.py`, `videos/urls.py`, `videos/migrations/0002_videochat_user.py`
+- **Frontend**: `App.tsx`, `ChatInterface.tsx`, `api.ts`
+- **Documentation**: `.cursor/rules/guideai.mdc`
+
+### Key Improvements:
+1. **Data Efficiency**: Eliminated duplicate video entries
+2. **User Experience**: Persistent sessions and accessible chat history
+3. **Code Quality**: Full TypeScript type safety
+4. **Data Integrity**: Comprehensive URL validation
+5. **Functionality**: New chat button and session management
+
+### API Changes:
+- `POST /api/videos/process/` - Now accepts optional `chatId` parameter
+- `GET /api/videos/history/` - New endpoint for retrieving user's chat history
+
+### Database Changes:
+- `VideoChat` model now includes `user` foreign key field
+- Videos are deduplicated per user based on URL
+
+---
+
+## Notes:
+- All changes optimized for minimal code modifications
+- No exception handling added per project requirements
+- Clean, focused implementation without unnecessary features
+- Full backward compatibility maintained
