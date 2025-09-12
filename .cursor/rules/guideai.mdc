@@ -44,6 +44,7 @@ Database URL can be configured via DATABASE_URL environment variable.
 
 #### videos.VideoChat
 - `video` - ForeignKey to Video, PROTECT
+- `user` - ForeignKey to users.User, CASCADE
 - `chat_history` - JSONField, default=list
 - `created_at` - DateTimeField, auto_now_add=True
 - `updated_at` - DateTimeField, auto_now=True
@@ -59,7 +60,8 @@ Database URL can be configured via DATABASE_URL environment variable.
 - `POST /api/auth/logout/` - User logout
 
 ### Video Processing API Endpoints
-- `POST /api/videos/process/` - Process video and query, returns template response
+- `POST /api/videos/process/` - Process video and query with chat session support, returns template response
+- `GET /api/videos/history/` - Get user's chat history
 
 ## Frontend Architecture
 
@@ -81,7 +83,11 @@ Database URL can be configured via DATABASE_URL environment variable.
 - `ForgotPassword.tsx` - Password reset functionality (not implemented)
 
 #### Chat Components (`/apps/web/src/components/Chat/`)
-- `ChatInterface.tsx` - Main chat interface with video upload/URL input and error handling
+- `ChatInterface.tsx` - Main chat interface with:
+  - Video upload/URL input and error handling
+  - New Chat button to start fresh conversations
+  - Chat history viewer with clickable previous chats
+  - Session persistence and chat continuity
 - `MessageList.tsx` - Displays conversation history in sidebar
 - `VideoInput.tsx` - Handles video file upload or URL input
 - `ResponseTabs.tsx` - Tabbed interface for displaying:
@@ -108,11 +114,17 @@ Database URL can be configured via DATABASE_URL environment variable.
 - CORS configuration for frontend-backend communication
 - Custom User model with email-only authentication
 - Authentication API endpoints (login, signup, logout)
-- Video processing API endpoint with template responses
-- Session-based authentication
+- Video processing API endpoint with template responses and chat session support
+- Session-based authentication with localStorage persistence
 - Frontend-backend integration with axios
 - Error handling for authentication and video processing
 - User feedback for 4XX and 5XX errors
+- Video deduplication (same video URL not duplicated in database)
+- Chat session management (continuous chat without creating new video entries)
+- Chat history tracking for users
+- Interactive chat history viewer with ability to load previous conversations
+- New Chat button to start fresh conversations
+- Visual indicator showing number of previous chats
 
 ### In Progress
 - Video processing pipeline implementation
@@ -133,6 +145,7 @@ Database URL can be configured via DATABASE_URL environment variable.
 - ALLOWED_HOSTS is empty (needs configuration for production)
 - Default SQLite database (may need PostgreSQL/MySQL for production)
 - Frontend runs on port 3000, backend on port 8000
+- Video processing returns template responses (actual implementation pending)
 
 ### Security Considerations
 - CSRF protection enabled with trusted origins

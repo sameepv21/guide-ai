@@ -47,12 +47,19 @@ export const authAPI = {
 };
 
 export const videoAPI = {
-  processVideo: (videoUrl: string, query: string) => {
+  processVideo: (videoUrl: string, query: string, chatId?: number) => {
     const token = getCsrfToken();
     return axios.post(`${API_BASE_URL}/videos/process/`, { 
       videoUrl, 
-      query 
+      query,
+      chatId 
     }, {
+      headers: { 'X-CSRFToken': token || '' }
+    });
+  },
+  getChatHistory: () => {
+    const token = getCsrfToken();
+    return axios.get(`${API_BASE_URL}/videos/history/`, {
       headers: { 'X-CSRFToken': token || '' }
     });
   }

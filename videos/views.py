@@ -8,22 +8,43 @@ from videos.models import Video, VideoChat
 def process_video(request):
     video_url = request.data.get('videoUrl', '')
     query = request.data.get('query', '')
+    chat_id = request.data.get('chatId')
     
-    # Create video record
-    video = Video.objects.create(
-        video_path=video_url,
-        title=query[:255],
-        uploaded_by=request.user
-    )
+    # Check if we're continuing an existing chat or starting a new one
+    if chat_id:
+        chat = VideoChat.objects.filter(id=chat_id, user=request.user).first()
+        if chat:
+            # Append to existing chat history
+            chat.chat_history.append({'query': query, 'response': None})
+            video = chat.video
+        else:
+            chat_id = None
     
-    # Create chat record with query
-    chat = VideoChat.objects.create(
-        video=video,
-        chat_history=[{'query': query, 'response': None}]
-    )
+    if not chat_id:
+        # Check if video already exists for this user
+        video = Video.objects.filter(
+            video_path=video_url,
+            uploaded_by=request.user
+        ).first()
+        
+        if not video:
+            # Create new video only if it doesn't exist
+            video = Video.objects.create(
+                video_path=video_url,
+                title=query[:255],
+                uploaded_by=request.user
+            )
+        
+        # Create new chat for this video
+        chat = VideoChat.objects.create(
+            video=video,
+            user=request.user,
+            chat_history=[{'query': query, 'response': None}]
+        )
     
     # Template response
     response_data = {
+        'chatId': chat.id,
         'response': f"Based on the video analysis, here's what I found regarding your query: '{query}'. The video shows relevant content that addresses your question. Key insights include understanding of the main topic, visual elements, and contextual information.",
         'reasoning': "I analyzed the video frame by frame, extracting visual features and understanding the context. The analysis involved scene detection, object recognition, and temporal understanding to provide a comprehensive answer to your query.",
         'keyFrames': [
@@ -52,7 +73,26 @@ def process_video(request):
     }
     
     # Update chat history with response
-    chat.chat_history[0]['response'] = response_data
+    chat.chat_history[-1]['response'] = response_data
     chat.save()
     
     return Response(response_data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+def get_chat_history(request):
+    chats = VideoChat.objects.filter(user=request.user).select_related('video')
+    
+    history = []
+    for chat in chats:
+        history.append({
+            'id': chat.id,
+            'videoUrl': chat.video.video_path,
+            'videoTitle': chat.video.title,
+            'lastMessage': chat.chat_history[-1]['query'] if chat.chat_history else '',
+            'updatedAt': chat.updated_at.isoformat(),
+            'messageCount': len(chat.chat_history),
+            'chat_history': chat.chat_history  # Include full chat history for loading
+        })
+    
+    return Response({'chats': history}, status=status.HTTP_200_OK)
