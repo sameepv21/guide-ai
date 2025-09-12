@@ -2,6 +2,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from videos.models import Video, VideoChat
+import re
 
 
 @api_view(['POST'])
@@ -9,6 +10,18 @@ def process_video(request):
     video_url = request.data.get('videoUrl', '')
     query = request.data.get('query', '')
     chat_id = request.data.get('chatId')
+    
+    # Validate URL format
+    url_pattern = re.compile(
+        r'^https?://'  # http:// or https://
+        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?|'  # domain...
+        r'localhost|'  # localhost...
+        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
+        r'(?::\d+)?'  # optional port
+        r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+    
+    if video_url and not url_pattern.match(video_url):
+        return Response({'error': 'Invalid URL format. Please provide a valid video URL.'}, status=status.HTTP_400_BAD_REQUEST)
     
     # Check if we're continuing an existing chat or starting a new one
     if chat_id:

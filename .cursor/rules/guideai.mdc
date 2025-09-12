@@ -181,7 +181,8 @@ Database URL can be configured via DATABASE_URL environment variable.
 ### Frontend Error Handling
 - Login errors: Invalid credentials, server errors, connection issues
 - Signup errors: Email exists, password mismatch, validation errors
-- Video processing errors: Session expiry, server errors, connection issues
+- Video processing errors: Session expiry, server errors, connection issues, invalid URL format
+- URL validation: Client-side and server-side validation for video URLs
 - User-friendly error messages displayed in UI
 - Automatic logout on session expiry (401 errors)
 

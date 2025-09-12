@@ -1,0 +1,15 @@
+---
+description: Rules for entire project
+globs:
+alwaysApply: true
+---
+
+# Your rule content
+
+- With any big features and upgrades in the repo. You should also update the guideai.mdc iin .cursor/rules.
+- Note that in the update, you should also take care of the fact that there might be some old stuff as well that does not have any connection with the current system.
+- You should just remove those and just keep the file updated to represent the current entire repo structure. This is of prime importance.
+- Always use conda activate guide-ai to activate the enivonment.
+- Use python3 instead of python to run any python commands.
+- You should also change and update the CHANGELOG.md as well. This is a file that essentially keeps tracks of what are the changes that are made and whether they are bug fixes or feature changes.
+- Note that you should mention why this change was made, what was the change that was made and what are results of this change.

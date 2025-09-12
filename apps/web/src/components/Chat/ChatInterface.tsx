@@ -86,6 +86,15 @@ export default function ChatInterface({ setIsAuthenticated }: ChatInterfaceProps
     
     if (!query.trim() || (!videoFile && !videoUrl)) return;
 
+    // Basic client-side URL validation for immediate feedback
+    if (inputType === 'url' && videoUrl) {
+      const urlPattern = /^https?:\/\/.+/i;
+      if (!urlPattern.test(videoUrl)) {
+        setError('Invalid URL format. Please enter a valid URL starting with http:// or https://');
+        return;
+      }
+    }
+
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
@@ -147,6 +156,8 @@ export default function ChatInterface({ setIsAuthenticated }: ChatInterfaceProps
         if (err.response?.status === 401) {
           setError('Your session has expired. Please login again');
           setTimeout(() => setIsAuthenticated(false), 2000);
+        } else if (err.response?.status === 400 && err.response?.data?.error) {
+          setError(err.response.data.error);
         } else if (err.response?.status >= 500) {
           setError('Server error. Please try again later');
         } else {
