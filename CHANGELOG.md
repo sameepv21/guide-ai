@@ -1,5 +1,28 @@
 # Guide AI - Change Log
 
+## Session: September 14, 2025
+
+### Documentation Update - Data Flow Architecture
+
+#### What Changed:
+- **Documentation (`.cursor/rules/guideai.mdc`)**: Complete rewrite with comprehensive data flow documentation
+
+#### Why Changed:
+- Previous documentation lacked clear explanation of how data flows through the system
+- No comprehensive overview of the execution flow and system architecture
+- Developers needed better understanding of component interactions and state management
+
+#### Result:
+- Added detailed data flow diagrams for all major system processes
+- Documented authentication flow, video processing flow, and chat continuation flow
+- Added state management architecture explanation
+- Included component hierarchy and interaction patterns
+- Provided clear API communication layer documentation
+- Added development workflow instructions
+- Documented all current features, limitations, and planned improvements
+
+---
+
 ## Session: September 12, 2025
 
 ### Overview

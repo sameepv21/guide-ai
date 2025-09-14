@@ -6,187 +6,343 @@ alwaysApply: true
 
 # Guide AI Project Documentation
 
+## System Overview
+
+Guide AI is a video-guided Q&A system that allows users to upload videos or provide video URLs and ask questions about the video content. The system provides AI-powered responses with reasoning, key frames, and timestamps.
+
+## Data Flow Architecture
+
+### 1. Authentication Flow
+
+#### User Registration (Signup)
+```
+Frontend (Signup.tsx) → POST /api/auth/signup/ → users.views.signup_view
+├── Input: email, password, firstName, lastName
+├── Processing:
+│   ├── Check if email exists in database
+│   ├── Create new User object if email is unique
+│   └── Hash password using Django's make_password
+└── Response: Success/Error message
+```
+
+#### User Login
+```
+Frontend (Login.tsx) → POST /api/auth/login/ → users.views.login_view
+├── Input: email, password
+├── Processing:
+│   ├── Check if user exists by email
+│   ├── Authenticate using EmailBackend
+│   ├── Create Django session if successful
+│   └── Store session in localStorage (frontend)
+└── Response: User data + session cookie
+```
+
+#### Session Management
+- Frontend stores `isAuthenticated` flag in localStorage
+- Django session cookie maintains server-side session
+- All authenticated requests include session cookie
+- 401 responses trigger automatic logout
+
+### 2. Video Processing Flow
+
+#### New Video Submission
+```
+Frontend (ChatInterface.tsx) → POST /api/videos/process/ → videos.views.process_video
+├── Input: videoUrl, query, chatId (optional)
+├── Processing:
+│   ├── Validate URL format (regex validation)
+│   ├── Check for existing chat (if chatId provided)
+│   ├── Create/Retrieve Video object
+│   │   └── Deduplication: Same URL for same user won't create duplicate
+│   ├── Create/Update VideoChat object
+│   │   └── Stores chat history as JSON array
+│   └── Generate template response (placeholder for actual AI processing)
+└── Response: chatId, response, reasoning, keyFrames, timestamps
+```
+
+#### Chat Continuation Flow
+```
+Same video, new query:
+├── Frontend sends: videoUrl, query, chatId (from previous response)
+├── Backend:
+│   ├── Retrieves existing VideoChat by chatId
+│   ├── Appends new query to chat_history
+│   ├── Processes query (currently template)
+│   └── Updates chat_history with response
+└── Maintains conversation context
+```
+
+#### Chat History Retrieval
+```
+Frontend → GET /api/videos/history/ → videos.views.get_chat_history
+├── Processing:
+│   ├── Query all VideoChat objects for current user
+│   ├── Include related Video data
+│   └── Format with metadata (id, title, message count, etc.)
+└── Response: Array of chat sessions with full history
+```
+
+### 3. Data Persistence Architecture
+
+#### Database Models Relationships
+```
+User (Custom Django User Model)
+  ↓ (one-to-many)
+Video (stores video URL/path)
+  ↓ (one-to-many, PROTECT deletion)
+VideoChat (stores conversation history)
+  ├── video: ForeignKey to Video
+  ├── user: ForeignKey to User
+  └── chat_history: JSONField (array of Q&A pairs)
+```
+
+#### Chat History Structure
+```json
+{
+  "chat_history": [
+    {
+      "query": "User's question about video",
+      "response": {
+        "response": "AI's answer",
+        "reasoning": "How AI analyzed the video",
+        "keyFrames": [...],
+        "timestamps": [...]
+      }
+    }
+  ]
+}
+```
+
+### 4. Frontend State Management
+
+#### Component Hierarchy
+```
+App.tsx (Authentication State)
+  ├── Login/Signup (Set Authentication)
+  └── ChatInterface (Main Application)
+      ├── Sidebar
+      │   ├── New Chat Button
+      │   ├── Chat History List
+      │   └── Message List (Current Session)
+      ├── Main Area
+      │   ├── ResponseTabs (Display Results)
+      │   └── VideoInput + Query Form
+      └── State Management:
+          ├── messages: Current conversation
+          ├── currentChatId: Active session ID
+          ├── currentVideoUrl: Active video
+          └── chatHistory: Previous sessions
+```
+
+#### State Flow During Interaction
+1. **Initial Load**: Fetch chat history, check authentication
+2. **New Query**: 
+   - Add user message to local state
+   - Send API request
+   - Update with AI response
+   - Refresh chat history
+3. **Load Previous Chat**:
+   - Set currentChatId and currentVideoUrl
+   - Load messages from chat_history
+   - Enable continuation of conversation
+4. **New Chat**:
+   - Clear all local state
+   - Reset currentChatId and currentVideoUrl
+   - Refresh chat history list
+
+### 5. API Communication Layer
+
+#### Request/Response Cycle
+```
+Frontend (axios) → Django REST Framework → View Function → Database
+                ← JSON Response ← Serialization ← Model Data ←
+```
+
+#### Error Handling Flow
+```
+API Error → axios interceptor → Component error state → UI feedback
+├── 401: Session expired → Auto logout
+├── 400: Validation error → Display message
+├── 500: Server error → Generic error message
+└── Network error → Connection error message
+```
+
+## Current System Features
+
+### Implemented Features
+1. **Authentication System**
+   - Email-based authentication (no username)
+   - Session persistence with localStorage
+   - Automatic logout on session expiry
+
+2. **Video Chat System**
+   - URL validation (client and server-side)
+   - Video deduplication per user
+   - Continuous chat sessions
+   - Chat history management
+   - Previous chat loading
+
+3. **User Interface**
+   - Dark theme with glassmorphism
+   - Responsive tabbed interface
+   - Real-time loading states
+   - Error feedback system
+   - Animation effects (Framer Motion)
+
+### Template Response Structure
+Currently, the system returns template responses with:
+- **Response**: Generic AI answer
+- **Reasoning**: Placeholder explanation
+- **Key Frames**: SVG placeholder images with timestamps
+- **Timestamps**: Time segments with descriptions
+
+### Planned Features (Not Implemented)
+1. **Actual Video Processing**
+   - Frame extraction
+   - Video analysis AI
+   - RAG system integration
+   - Real video thumbnails
+
+2. **Advanced Features**
+   - WebSocket for real-time updates
+   - Video streaming support
+   - File upload to server
+   - Multi-language support
+
+## Technical Stack Summary
+
+### Backend Stack
+- **Framework**: Django 5.2.6 + Django REST Framework
+- **Database**: SQLite (development)
+- **Authentication**: Django sessions + Custom EmailBackend
+- **CORS**: django-cors-headers
+
+### Frontend Stack
+- **Framework**: React 19.1.1 + TypeScript
+- **Build Tool**: Vite 7.1.2
+- **Styling**: Tailwind CSS 4.1.13
+- **Animations**: Framer Motion
+- **HTTP Client**: Axios
+- **Icons**: Lucide React
+
+### Development Environment
+- **Backend Port**: 8000
+- **Frontend Port**: 3000
+- **Python Environment**: Conda (guide-ai)
+- **Package Management**: npm (frontend), pip (backend)
+
+## Security Considerations
+
+### Current Implementation
+- CSRF protection enabled
+- Session-based authentication
+- Password hashing (Django default)
+- CORS restricted to localhost:3000
+- Input validation (URL format)
+
+### Production Requirements
+- Move SECRET_KEY to environment variable
+- Set DEBUG = False
+- Configure ALLOWED_HOSTS
+- Implement HTTPS
+- Add rate limiting
+- Enhance input sanitization
+
 ## Database Schema
-
-Currently using Django's default database configuration with SQLite for development.
-Database URL can be configured via DATABASE_URL environment variable.
-
-### Django Default Tables (managed by Django)
-- auth_group
-- auth_permission
-- django_admin_log
-- django_content_type
-- django_session
-- django_migrations
 
 ### Custom Models
 
-#### users.User (replaces default auth_user)
-- `email` - EmailField, unique, max_length=255 (PRIMARY LOGIN FIELD)
-- `first_name` - CharField, max_length=30, blank=True
-- `last_name` - CharField, max_length=30, blank=True
-- `is_active` - BooleanField, default=True
-- `is_staff` - BooleanField, default=False
-- `is_superuser` - BooleanField (from PermissionsMixin)
-- `date_joined` - DateTimeField, auto_now_add=True
-- `last_login` - DateTimeField (from AbstractBaseUser)
-- `password` - CharField (from AbstractBaseUser)
-- `groups` - ManyToMany to auth.Group (from PermissionsMixin)
-- `user_permissions` - ManyToMany to auth.Permission (from PermissionsMixin)
-
-**Note**: Username field has been removed. Authentication is email-only.
+#### users.User (Custom User Model)
+- `email` - EmailField, unique (PRIMARY LOGIN)
+- `first_name` - CharField, optional
+- `last_name` - CharField, optional
+- `is_active` - BooleanField
+- `is_staff` - BooleanField
+- `date_joined` - DateTimeField
+- `password` - Hashed password
 
 #### videos.Video
-- `video_path` - CharField, max_length=500
-- `title` - CharField, max_length=255, blank=True
-- `uploaded_by` - ForeignKey to users.User, CASCADE
-- `uploaded_at` - DateTimeField, auto_now_add=True
+- `video_path` - CharField (stores URL)
+- `title` - CharField (from first query)
+- `uploaded_by` - ForeignKey to User
+- `uploaded_at` - DateTimeField
 
 #### videos.VideoChat
-- `video` - ForeignKey to Video, PROTECT
-- `user` - ForeignKey to users.User, CASCADE
-- `chat_history` - JSONField, default=list
-- `created_at` - DateTimeField, auto_now_add=True
-- `updated_at` - DateTimeField, auto_now=True
+- `video` - ForeignKey to Video (PROTECT)
+- `user` - ForeignKey to User
+- `chat_history` - JSONField (conversation array)
+- `created_at` - DateTimeField
+- `updated_at` - DateTimeField
 
-## API Endpoints
+## File Structure
 
-### Admin Interface
-- `/admin/` - Django Admin interface (authentication required)
+```
+guide-ai/
+├── backend/                 # Django backend
+│   ├── settings.py         # Django configuration
+│   ├── urls.py             # Main URL routing
+│   └── wsgi.py            # WSGI application
+├── users/                  # Authentication app
+│   ├── models.py          # Custom User model
+│   ├── views.py           # Auth endpoints
+│   └── backends.py        # EmailBackend
+├── videos/                 # Video processing app
+│   ├── models.py          # Video, VideoChat models
+│   └── views.py           # Video API endpoints
+├── apps/web/              # React frontend
+│   ├── src/
+│   │   ├── components/    # React components
+│   │   ├── services/      # API service layer
+│   │   └── App.tsx        # Main application
+│   └── package.json       # Frontend dependencies
+└── requirements/          # Python dependencies
+    ├── base.txt          # Core packages
+    └── local.txt         # Development packages
+```
 
-### Authentication API Endpoints
-- `POST /api/auth/login/` - User login with email/password
-- `POST /api/auth/signup/` - User registration
-- `POST /api/auth/logout/` - User logout
+## Known Limitations
 
-### Video Processing API Endpoints
-- `POST /api/videos/process/` - Process video and query with chat session support, returns template response
-- `GET /api/videos/history/` - Get user's chat history
+1. **Video Processing**: Returns template responses only
+2. **File Upload**: Not implemented (URL only)
+3. **Authentication**: Session-only (no JWT)
+4. **Database**: SQLite (not production-ready)
+5. **Search**: No search functionality in chat history
+6. **Export**: No chat export feature
+7. **Sharing**: No video/chat sharing capability
 
-## Frontend Architecture
+## Error States and Handling
 
-### Technology Stack
-- React 19.1.1 with TypeScript
-- Vite as build tool
-- Tailwind CSS 4.1.13 for styling
-- Framer Motion for animations
-- React Router DOM for navigation
-- React Hook Form for form handling
-- Lucide React for icons
-- Axios for API communication
+### Frontend Error States
+- Invalid credentials → Red error message
+- Session expired → Auto-logout with message
+- Network error → Connection error display
+- Invalid URL → Format validation error
+- Server error → Generic error message
 
-### Component Structure
+### Backend Error Responses
+- 400: Bad Request (validation errors)
+- 401: Unauthorized (authentication required)
+- 404: Not Found (user/resource not found)
+- 500: Internal Server Error
 
-#### Authentication Components (`/apps/web/src/components/Auth/`)
-- `Login.tsx` - Login page with email/password authentication and error handling
-- `Signup.tsx` - User registration with validation and error handling
-- `ForgotPassword.tsx` - Password reset functionality (not implemented)
+## Development Workflow
 
-#### Chat Components (`/apps/web/src/components/Chat/`)
-- `ChatInterface.tsx` - Main chat interface with:
-  - Video upload/URL input and error handling
-  - New Chat button to start fresh conversations
-  - Chat history viewer with clickable previous chats
-  - Session persistence and chat continuity
-- `MessageList.tsx` - Displays conversation history in sidebar
-- `VideoInput.tsx` - Handles video file upload or URL input
-- `ResponseTabs.tsx` - Tabbed interface for displaying:
-  - Response: AI-generated answer from backend
-  - Reasoning: Analysis process explanation
-  - Key Frames: Relevant video frames with timestamps
-  - Timestamps: Clickable time segments with descriptions
+### Starting the Application
+```bash
+# Backend
+conda activate guide-ai
+cd guide-ai
+python3 manage.py runserver
 
-#### API Service (`/apps/web/src/services/`)
-- `api.ts` - Centralized API service using axios for backend communication
+# Frontend (new terminal)
+cd apps/web
+npm run dev
+```
 
-### Design System
-- Dark theme with gradient backgrounds (gray-950 to gray-900)
-- Glass morphism effects with backdrop blur
-- Purple and blue accent colors for interactive elements
-- Smooth animations using Framer Motion
-- Error messages in red with semi-transparent backgrounds
+### Making Changes
+1. Backend changes: Django auto-reloads
+2. Frontend changes: Vite HMR updates
+3. Database changes: Create and run migrations
+4. Style changes: Tailwind JIT compilation
 
-## Current Feature Status
-
-### Completed
-- Basic Django project setup (Django 5.2.6)
-- Django REST Framework integration
-- CORS configuration for frontend-backend communication
-- Custom User model with email-only authentication
-- Authentication API endpoints (login, signup, logout)
-- Video processing API endpoint with template responses and chat session support
-- Session-based authentication with localStorage persistence
-- Frontend-backend integration with axios
-- Error handling for authentication and video processing
-- User feedback for 4XX and 5XX errors
-- Video deduplication (same video URL not duplicated in database)
-- Chat session management (continuous chat without creating new video entries)
-- Chat history tracking for users
-- Interactive chat history viewer with ability to load previous conversations
-- New Chat button to start fresh conversations
-- Visual indicator showing number of previous chats
-
-### In Progress
-- Video processing pipeline implementation
-- RAG system implementation
-
-### Planned
-- WebSocket support for real-time processing updates
-- Video streaming capabilities
-- Multi-language support
-- Mobile responsive design
-- Actual video analysis (currently returns template responses)
-
-## Known Issues/Constraints
-
-### Configuration
-- DEBUG = True (development mode)
-- SECRET_KEY is hardcoded (needs to be moved to environment variable for production)
-- ALLOWED_HOSTS is empty (needs configuration for production)
-- Default SQLite database (may need PostgreSQL/MySQL for production)
-- Frontend runs on port 3000, backend on port 8000
-- Video processing returns template responses (actual implementation pending)
-
-### Security Considerations
-- CSRF protection enabled with trusted origins
-- Session authentication configured
-- Standard Django password validators in place
-- Custom authentication backend (EmailBackend) for email-only login
-- AUTH_USER_MODEL set to 'users.User'
-- CORS configured for localhost:3000
-
-## Technical Stack
-
-### Backend
-- Django 5.2.6
-- Django REST Framework 3.15.2
-- django-cors-headers 4.7.0
-- django-environ 0.12.0
-- Python (version as per system)
-- SQLite (default database)
-
-### Frontend
-- React 19.1.1
-- TypeScript 5.8.3
-- Vite 7.1.2 (build tool)
-- Tailwind CSS 4.1.13
-- Framer Motion (animations)
-- React Router DOM (routing)
-- React Hook Form (form handling)
-- Lucide React (icons)
-- Axios (HTTP client)
-
-## Error Handling
-
-### Frontend Error Handling
-- Login errors: Invalid credentials, server errors, connection issues
-- Signup errors: Email exists, password mismatch, validation errors
-- Video processing errors: Session expiry, server errors, connection issues, invalid URL format
-- URL validation: Client-side and server-side validation for video URLs
-- User-friendly error messages displayed in UI
-- Automatic logout on session expiry (401 errors)
-
-### Backend Response Format
-- Success responses include data and appropriate status codes
-- Error responses handled by Django REST Framework
-- Template responses for video processing (to be replaced with actual implementation)
+This documentation represents the current state of the Guide AI system as of the latest update.
