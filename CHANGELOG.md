@@ -1,5 +1,30 @@
 # Guide AI - Change Log
 
+## Session: September 15, 2025
+
+### Feature Addition - US Phone Number Support in User Registration
+
+#### What Changed:
+- **Backend (User Model)**: Added `phone_number` field with US format validation (10 digits)
+- **Backend (Signup View)**: Updated to accept and save phone number during registration
+- **Frontend (Signup Component)**: Added phone number input field with real-time validation
+- **Frontend (API Service)**: Updated signup method to include phone number parameter
+- **Admin Interface**: Added phone number to list display, search fields, and forms
+
+#### Why Changed:
+- User requested phone number collection during signup for enhanced user profile information
+- Needed US-specific phone number validation to ensure data quality
+- Required for potential future features like SMS notifications or two-factor authentication
+
+#### Result:
+- Users can now provide their US phone number during registration
+- Phone numbers are validated for 10-digit US format (supports various input formats)
+- Phone numbers are displayed in admin interface for user management
+- Backend stores phone numbers in standardized 10-digit format
+- Field is optional to maintain backward compatibility
+
+---
+
 ## Session: September 14, 2025
 
 ### Documentation Update - Data Flow Architecture

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Mail, Lock, Eye, EyeOff, User } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, User, Phone } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { authAPI } from '../../services/api';
 
@@ -13,6 +13,7 @@ interface SignupForm {
   firstName: string;
   lastName: string;
   email: string;
+  phoneNumber: string;
   password: string;
   confirmPassword: string;
 }
@@ -29,8 +30,15 @@ export default function Signup({ setIsAuthenticated }: SignupProps) {
       return;
     }
     
+    // Validate phone number (US format - 10 digits)
+    const phoneDigits = data.phoneNumber.replace(/\D/g, '');
+    if (phoneDigits.length !== 10) {
+      setError('Please enter a valid 10-digit US phone number');
+      return;
+    }
+    
     setError('');
-    authAPI.signup(data.email, data.password, data.firstName, data.lastName)
+    authAPI.signup(data.email, data.password, data.firstName, data.lastName, phoneDigits)
       .then(() => {
         return authAPI.login(data.email, data.password);
       })
@@ -125,6 +133,31 @@ export default function Signup({ setIsAuthenticated }: SignupProps) {
                   type="email"
                   className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-gray-200 placeholder-gray-500"
                   placeholder="john@example.com"
+                />
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.45 }}
+            >
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Phone Number
+              </label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
+                <input
+                  {...register('phoneNumber', { 
+                    required: true,
+                    pattern: {
+                      value: /^(\+1)?[\s.-]?\(?[0-9]{3}\)?[\s.-]?[0-9]{3}[\s.-]?[0-9]{4}$/,
+                      message: 'Invalid US phone number format'
+                    }
+                  })}
+                  type="tel"
+                  className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-gray-200 placeholder-gray-500"
+                  placeholder="(555) 123-4567"
                 />
               </div>
             </motion.div>

@@ -17,9 +17,10 @@ Guide AI is a video-guided Q&A system that allows users to upload videos or prov
 #### User Registration (Signup)
 ```
 Frontend (Signup.tsx) → POST /api/auth/signup/ → users.views.signup_view
-├── Input: email, password, firstName, lastName
+├── Input: email, password, firstName, lastName, phoneNumber
 ├── Processing:
 │   ├── Check if email exists in database
+│   ├── Validate US phone number format (10 digits)
 │   ├── Create new User object if email is unique
 │   └── Hash password using Django's make_password
 └── Response: Success/Error message
@@ -172,6 +173,7 @@ API Error → axios interceptor → Component error state → UI feedback
 ### Implemented Features
 1. **Authentication System**
    - Email-based authentication (no username)
+   - US phone number collection during signup (10-digit validation)
    - Session persistence with localStorage
    - Automatic logout on session expiry
 
@@ -256,6 +258,7 @@ Currently, the system returns template responses with:
 - `email` - EmailField, unique (PRIMARY LOGIN)
 - `first_name` - CharField, optional
 - `last_name` - CharField, optional
+- `phone_number` - CharField, optional (US 10-digit format validation)
 - `is_active` - BooleanField
 - `is_staff` - BooleanField
 - `date_joined` - DateTimeField

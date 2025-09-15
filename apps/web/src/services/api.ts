@@ -26,13 +26,14 @@ export const authAPI = {
     });
   },
   
-  signup: (email: string, password: string, firstName: string, lastName: string) => {
+  signup: (email: string, password: string, firstName: string, lastName: string, phoneNumber: string) => {
     const token = getCsrfToken();
     return axios.post(`${API_BASE_URL}/auth/signup/`, { 
       email, 
       password, 
       firstName, 
-      lastName 
+      lastName,
+      phoneNumber 
     }, {
       headers: { 'X-CSRFToken': token || '' }
     });

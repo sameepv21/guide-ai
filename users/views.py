@@ -13,6 +13,7 @@ def signup_view(request):
     password = request.data.get('password')
     first_name = request.data.get('firstName', '')
     last_name = request.data.get('lastName', '')
+    phone_number = request.data.get('phoneNumber', '')
     
     # Check if user already exists
     if User.objects.filter(email=email).exists():
@@ -22,7 +23,8 @@ def signup_view(request):
         email=email,
         password=password,
         first_name=first_name,
-        last_name=last_name
+        last_name=last_name,
+        phone_number=phone_number
     )
     
     return Response({'message': 'User created successfully'}, status=status.HTTP_201_CREATED)

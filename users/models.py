@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.db import models
+from django.core.validators import RegexValidator
 
 
 class UserManager(BaseUserManager):
@@ -25,6 +26,17 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True, max_length=255)
     first_name = models.CharField(max_length=30, blank=True)
     last_name = models.CharField(max_length=30, blank=True)
+    phone_number = models.CharField(
+        max_length=10,
+        validators=[
+            RegexValidator(
+                regex=r'^[0-9]{10}$',
+                message='Phone number must be exactly 10 digits (US format without country code or special characters)'
+            )
+        ],
+        blank=True,
+        help_text='Enter 10-digit US phone number (e.g., 5551234567)'
+    )
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(auto_now_add=True)
