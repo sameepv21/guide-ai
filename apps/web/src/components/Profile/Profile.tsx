@@ -20,17 +20,26 @@ export default function Profile() {
     phoneNumber: ''
   });
   const [passwordMode, setPasswordMode] = useState(false);
-  const [verificationSent, setVerificationSent] = useState(false);
+  const [codeVerified, setCodeVerified] = useState(false);
   const [verificationCode, setVerificationCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [isSendingCode, setIsSendingCode] = useState(false);
 
   useEffect(() => {
     fetchProfile();
   }, []);
+
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendCooldown]);
 
   const fetchProfile = () => {
     profileAPI.getProfile()
@@ -72,15 +81,41 @@ export default function Profile() {
   };
 
   const handleRequestPasswordChange = () => {
+    setError('');
+    setIsSendingCode(true);
     profileAPI.requestPasswordChange()
       .then(() => {
-        setVerificationSent(true);
-        setMessage('Verification code sent to your email');
-        setTimeout(() => setMessage(''), 3000);
+        setResendCooldown(30); // 30 second cooldown
+        setMessage('Verification code sent to your email!');
+        setTimeout(() => setMessage(''), 5000);
       })
       .catch(() => {
-        setError('Failed to send verification code');
+        setError('Failed to send verification code. Please try again.');
+        setPasswordMode(false); // Reset on failure
+        setTimeout(() => setError(''), 3000);
+      })
+      .finally(() => {
+        setIsSendingCode(false);
       });
+  };
+
+  const handleVerifyCode = () => {
+    if (!verificationCode || verificationCode.length !== 6) {
+      setError('Please enter a valid 6-digit code');
+      return;
+    }
+    
+    if (!/^\d{6}$/.test(verificationCode)) {
+      setError('Code must contain only numbers');
+      return;
+    }
+    
+    // Note: Actual verification happens when password is changed
+    // This is just for better UX flow
+    setCodeVerified(true);
+    setMessage('Proceed to set your new password');
+    setError('');
+    setTimeout(() => setMessage(''), 3000);
   };
 
   const handleChangePassword = () => {
@@ -97,7 +132,7 @@ export default function Profile() {
     profileAPI.changePassword(verificationCode, newPassword)
       .then(() => {
         setPasswordMode(false);
-        setVerificationSent(false);
+        setCodeVerified(false);
         setVerificationCode('');
         setNewPassword('');
         setConfirmPassword('');
@@ -107,6 +142,10 @@ export default function Profile() {
       .catch(err => {
         if (err.response?.data?.error) {
           setError(err.response.data.error);
+          // If code is invalid, go back to code entry
+          if (err.response.data.error.includes('code')) {
+            setCodeVerified(false);
+          }
         } else {
           setError('Failed to change password');
         }
@@ -296,30 +335,26 @@ export default function Profile() {
                 </div>
               ) : (
                 <button
-                  onClick={() => setPasswordMode(true)}
-                  className="w-full flex items-center justify-center gap-2 py-3 bg-gray-800/50 border border-gray-700 text-gray-300 rounded-lg hover:bg-gray-800 transition-all"
+                  onClick={() => {
+                    setPasswordMode(true);
+                    handleRequestPasswordChange();
+                  }}
+                  disabled={isSendingCode}
+                  className={`w-full flex items-center justify-center gap-2 py-3 border rounded-lg transition-all ${
+                    isSendingCode 
+                      ? 'bg-gray-800/30 border-gray-700 text-gray-500 cursor-not-allowed' 
+                      : 'bg-gray-800/50 border-gray-700 text-gray-300 hover:bg-gray-800'
+                  }`}
                 >
                   <Lock className="w-5 h-5" />
-                  Change Password
+                  {isSendingCode ? 'Sending Code...' : 'Change Password'}
                 </button>
               )}
             </div>
           ) : (
             /* Password Change Section */
             <div className="space-y-6">
-              {!verificationSent ? (
-                <>
-                  <p className="text-gray-400">
-                    To change your password, we'll send a verification code to your email address.
-                  </p>
-                  <button
-                    onClick={handleRequestPasswordChange}
-                    className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all"
-                  >
-                    Send Verification Code
-                  </button>
-                </>
-              ) : (
+              {!codeVerified ? (
                 <>
                   <div>
                     <label className="block text-sm font-medium text-gray-400 mb-2">
@@ -333,9 +368,33 @@ export default function Profile() {
                       maxLength={6}
                       className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-200 focus:outline-none focus:border-blue-500"
                     />
-                    <p className="mt-1 text-xs text-gray-500">Code expires in 5 minutes</p>
+                    <p className="mt-1 text-xs text-gray-500">Code has been sent to your email. It expires in 5 minutes.</p>
                   </div>
 
+                  <div className="flex gap-3">
+                    <button
+                      onClick={handleVerifyCode}
+                      className="flex-1 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all"
+                    >
+                      Verify Code
+                    </button>
+                    <button
+                      onClick={handleRequestPasswordChange}
+                      disabled={resendCooldown > 0 || isSendingCode}
+                      className={`px-6 py-3 border rounded-lg transition-all ${
+                        resendCooldown > 0 || isSendingCode
+                          ? 'bg-gray-800/30 border-gray-700 text-gray-600 cursor-not-allowed'
+                          : 'bg-gray-700/50 border-gray-600 text-gray-400 hover:bg-gray-700'
+                      }`}
+                    >
+                      {isSendingCode ? 'Sending...' : resendCooldown > 0 ? `Resend (${resendCooldown}s)` : 'Resend Code'}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="text-green-400 text-sm mb-2">✓ Code accepted. Now create your new password.</p>
+                  
                   <div>
                     <label className="block text-sm font-medium text-gray-400 mb-2">
                       New Password
@@ -373,31 +432,26 @@ export default function Profile() {
                     </div>
                   </div>
 
-                  <div className="flex gap-3">
-                    <button
-                      onClick={handleChangePassword}
-                      className="flex-1 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all"
-                    >
-                      Change Password
-                    </button>
-                    <button
-                      onClick={handleRequestPasswordChange}
-                      className="px-6 py-3 bg-gray-700/50 border border-gray-600 text-gray-400 rounded-lg hover:bg-gray-700 transition-all"
-                    >
-                      Resend Code
-                    </button>
-                  </div>
+                  <button
+                    onClick={handleChangePassword}
+                    className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all"
+                  >
+                    Change Password
+                  </button>
                 </>
               )}
 
               <button
                 onClick={() => {
                   setPasswordMode(false);
-                  setVerificationSent(false);
+                  setCodeVerified(false);
                   setVerificationCode('');
                   setNewPassword('');
                   setConfirmPassword('');
                   setError('');
+                  setResendCooldown(0);
+                  setMessage('');
+                  setIsSendingCode(false);
                 }}
                 className="w-full py-3 bg-gray-700/50 border border-gray-600 text-gray-400 rounded-lg hover:bg-gray-700 transition-all"
               >
