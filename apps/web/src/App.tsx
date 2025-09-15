@@ -4,6 +4,7 @@ import Login from './components/Auth/Login';
 import Signup from './components/Auth/Signup';
 import ForgotPassword from './components/Auth/ForgotPassword';
 import ChatInterface from './components/Chat/ChatInterface';
+import Profile from './components/Profile/Profile';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
@@ -40,6 +41,14 @@ export default function App() {
             element={
               isAuthenticated ? 
               <ChatInterface setIsAuthenticated={setIsAuthenticated} /> : 
+              <Navigate to="/login" />
+            } 
+          />
+          <Route 
+            path="/profile" 
+            element={
+              isAuthenticated ? 
+              <Profile /> : 
               <Navigate to="/login" />
             } 
           />

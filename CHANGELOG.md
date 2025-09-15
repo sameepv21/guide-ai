@@ -2,6 +2,33 @@
 
 ## Session: September 15, 2025
 
+### Feature Addition - User Profile Management with Email-Based Password Change
+
+#### What Changed:
+- **Backend (Views)**: Added profile management endpoints (GET/PUT for profile, password change with email verification)
+- **Backend (URLs)**: Added routes for `/profile/`, `/request-password-change/`, `/change-password/`
+- **Backend (Settings)**: Added email configuration (console backend for dev) and cache configuration (locmem)
+- **Frontend (Profile Component)**: Created comprehensive profile management interface with edit mode and password change flow
+- **Frontend (API Service)**: Added profileAPI methods for all profile operations
+- **Frontend (Navigation)**: Added Profile route and navigation link in chat sidebar
+- **Email Verification**: Implemented 6-digit code verification system using Django cache (5-minute TTL)
+
+#### Why Changed:
+- Users need ability to view and update their personal information
+- Password change requires secure email verification to prevent unauthorized access
+- Temporary code storage via cache avoids unnecessary database modifications
+- Profile management is essential for user account control
+
+#### Result:
+- Users can view all their profile information (email, name, phone, join date)
+- Users can edit personal info (except email) with inline editing
+- Password change flow: Request code → Email sent → Enter code + new password → Change successful
+- Verification codes expire after 5 minutes for security
+- Clean UI with edit/save states and proper error handling
+- Email notifications printed to console in development
+
+---
+
 ### Feature Addition - US Phone Number Support in User Registration
 
 #### What Changed:

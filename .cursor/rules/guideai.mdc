@@ -44,6 +44,32 @@ Frontend (Login.tsx) → POST /api/auth/login/ → users.views.login_view
 - All authenticated requests include session cookie
 - 401 responses trigger automatic logout
 
+#### Profile Management Flow
+```
+Frontend (Profile.tsx) → GET/PUT /api/auth/profile/ → users.views.profile_view
+├── GET: Retrieve user profile data
+│   └── Response: email, firstName, lastName, phoneNumber, dateJoined
+├── PUT: Update profile (firstName, lastName, phoneNumber)
+│   ├── Validation: Phone number format (10 digits)
+│   └── Response: Updated profile data
+```
+
+#### Password Change Flow
+```
+Frontend → POST /api/auth/request-password-change/ → users.views.request_password_change
+├── Generate 6-digit verification code
+├── Store in Django cache (5-minute TTL)
+├── Send email with code
+└── Response: Success message
+
+Frontend → POST /api/auth/change-password/ → users.views.verify_and_change_password
+├── Input: verification code + new password
+├── Validate code from cache
+├── Update password if valid
+├── Clear code from cache
+└── Response: Success/Error
+```
+
 ### 2. Video Processing Flow
 
 #### New Video Submission
@@ -120,11 +146,16 @@ VideoChat (stores conversation history)
 ```
 App.tsx (Authentication State)
   ├── Login/Signup (Set Authentication)
+  ├── Profile (User Profile Management)
+  │   ├── View/Edit Personal Info
+  │   └── Password Change Flow
   └── ChatInterface (Main Application)
       ├── Sidebar
       │   ├── New Chat Button
       │   ├── Chat History List
-      │   └── Message List (Current Session)
+      │   ├── Message List (Current Session)
+      │   ├── Profile Button → Navigate to /profile
+      │   └── Logout Button
       ├── Main Area
       │   ├── ResponseTabs (Display Results)
       │   └── VideoInput + Query Form
@@ -176,6 +207,8 @@ API Error → axios interceptor → Component error state → UI feedback
    - US phone number collection during signup (10-digit validation)
    - Session persistence with localStorage
    - Automatic logout on session expiry
+   - Profile management with edit capabilities
+   - Email-verified password change (6-digit code, 5-minute expiry)
 
 2. **Video Chat System**
    - URL validation (client and server-side)
@@ -240,7 +273,10 @@ Currently, the system returns template responses with:
 - Session-based authentication
 - Password hashing (Django default)
 - CORS restricted to localhost:3000
-- Input validation (URL format)
+- Input validation (URL format, phone number)
+- Email verification for password changes
+- Temporary code storage in cache (5-minute TTL)
+- Email backend set to console (development only)
 
 ### Production Requirements
 - Move SECRET_KEY to environment variable
@@ -249,6 +285,8 @@ Currently, the system returns template responses with:
 - Implement HTTPS
 - Add rate limiting
 - Enhance input sanitization
+- Configure proper email backend (SMTP)
+- Use Redis/Memcached for production caching
 
 ## Database Schema
 

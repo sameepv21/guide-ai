@@ -65,3 +65,40 @@ export const videoAPI = {
     });
   }
 };
+
+export const profileAPI = {
+  getProfile: () => {
+    const token = getCsrfToken();
+    return axios.get(`${API_BASE_URL}/auth/profile/`, {
+      headers: { 'X-CSRFToken': token || '' }
+    });
+  },
+  
+  updateProfile: (firstName: string, lastName: string, phoneNumber: string) => {
+    const token = getCsrfToken();
+    return axios.put(`${API_BASE_URL}/auth/profile/`, {
+      firstName,
+      lastName,
+      phoneNumber
+    }, {
+      headers: { 'X-CSRFToken': token || '' }
+    });
+  },
+  
+  requestPasswordChange: () => {
+    const token = getCsrfToken();
+    return axios.post(`${API_BASE_URL}/auth/request-password-change/`, {}, {
+      headers: { 'X-CSRFToken': token || '' }
+    });
+  },
+  
+  changePassword: (code: string, newPassword: string) => {
+    const token = getCsrfToken();
+    return axios.post(`${API_BASE_URL}/auth/change-password/`, {
+      code,
+      newPassword
+    }, {
+      headers: { 'X-CSRFToken': token || '' }
+    });
+  }
+};
