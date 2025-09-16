@@ -52,6 +52,7 @@ THIRD_PARTY_APPS = [
 CUSTOM_APPS = [
     'users',
     'videos',
+    'ai_engine',
 ]
 
 INSTALLED_APPS = BASE_APPS + THIRD_PARTY_APPS + CUSTOM_APPS
