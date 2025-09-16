@@ -3,6 +3,9 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from videos.models import Video, VideoChat
 from videos.utils import download_youtube_video
+from ai_engine.processors.audio_processor import AudioProcessor
+from pathlib import Path
+from django.conf import settings
 import re
 
 
@@ -51,6 +54,11 @@ def process_video(request):
                 title=query[:255],
                 uploaded_by=request.user
             )
+            
+            # Process audio and transcription for new videos
+            full_video_path = settings.MEDIA_ROOT / local_video_path
+            processor = AudioProcessor(whisper_model="base")
+            audio_result = processor.process_video(full_video_path)
         
         # Create new chat for this video
         chat = VideoChat.objects.create(

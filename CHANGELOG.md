@@ -2,6 +2,30 @@
 
 ## Session: September 16, 2025
 
+### Feature Addition - Audio Extraction and Transcription with Whisper
+
+#### What Changed:
+- **AI Engine App**: Created new `ai_engine` Django app at root level
+- **Audio Processor**: Implemented `AudioProcessor` class for audio extraction and transcription
+- **Dependencies**: Added moviepy and openai-whisper for audio processing
+- **Integration**: Integrated audio processing into video upload workflow
+- **Test Script**: Created test_audio.py for standalone testing
+
+#### Why Changed:
+- Need to extract audio from videos for transcription
+- Whisper provides accurate speech-to-text capabilities
+- Foundation for multi-modal video analysis (text, audio, video)
+- Enables timestamp-based content retrieval
+
+#### Result:
+- Automatically extracts audio (.mp3) when new video is uploaded
+- Generates transcription with timestamps using Whisper
+- Audio saved in same directory as video
+- Transcription includes full text and timestamped segments
+- Ready for RAG system integration
+
+---
+
 ### Bug Fix - YouTube Bot Detection Bypass
 
 #### What Changed:

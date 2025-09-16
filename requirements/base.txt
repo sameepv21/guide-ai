@@ -8,3 +8,5 @@ django-cors-headers==4.7.0
 # Video Processing
 # ------------------------------------------------------------------------------
 yt-dlp==2024.8.6
+moviepy==1.0.3
+openai-whisper
