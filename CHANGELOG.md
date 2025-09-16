@@ -1,5 +1,54 @@
 # Guide AI - Change Log
 
+## Session: September 16, 2025
+
+### Bug Fix - YouTube Bot Detection Bypass
+
+#### What Changed:
+- **Backend (Video Utils)**: Enhanced `download_youtube_video` function with bot detection bypass mechanisms
+- Added browser-like headers (User-Agent, Accept headers, etc.)
+- Configured to use Chrome browser cookies if available
+- Added multiple player client fallbacks (android, web)
+- Enabled geographic bypass and age limit removal
+
+#### Why Changed:
+- YouTube was detecting yt-dlp as a bot and blocking downloads
+- Need to mimic real browser behavior to avoid detection
+- Chrome cookies provide authenticated session if user is logged in
+
+#### Result:
+- Downloads work more reliably by mimicking browser behavior
+- Automatically uses Chrome cookies if user is logged into YouTube
+- Falls back to Android player client if web client fails
+- Bypasses geographic and age restrictions
+
+---
+
+### Feature Addition - YouTube Video Download to Local Storage
+
+#### What Changed:
+- **Backend (Requirements)**: Added yt-dlp package for YouTube video downloading
+- **Backend (Settings)**: Added MEDIA_ROOT and MEDIA_URL configuration for file storage
+- **Backend (Video Utils)**: Created new `utils.py` with `download_youtube_video` function
+- **Backend (Process Video View)**: Modified to download videos to user-specific directories
+- **Data Storage**: Videos now stored locally instead of just saving URLs
+
+#### Why Changed:
+- Need to store actual video files for proper video processing capabilities
+- Each user should have isolated storage for their videos
+- Random naming prevents filename conflicts and improves security
+- Local storage enables future frame extraction and analysis features
+
+#### Result:
+- YouTube videos are downloaded automatically when URL is provided
+- Each user has a unique directory under `media/videos/<user_id>/`
+- Videos are saved with random UUID filenames (e.g., `a3f4b2c1d5e6f7g8.mp4`)
+- Database stores local file path instead of YouTube URL
+- Downloaded videos are excluded from version control via .gitignore
+- System maintains video deduplication based on local paths
+
+---
+
 ## Session: September 15, 2025
 
 ### Feature Addition - User Profile Management with Email-Based Password Change

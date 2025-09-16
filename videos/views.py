@@ -2,6 +2,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from videos.models import Video, VideoChat
+from videos.utils import download_youtube_video
 import re
 
 
@@ -34,16 +35,19 @@ def process_video(request):
             chat_id = None
     
     if not chat_id:
-        # Check if video already exists for this user
+        # Download video and save to user directory
+        local_video_path = download_youtube_video(video_url, request.user.id)
+        
+        # Check if video already exists for this user (by local path now)
         video = Video.objects.filter(
-            video_path=video_url,
+            video_path=local_video_path,
             uploaded_by=request.user
         ).first()
         
         if not video:
             # Create new video only if it doesn't exist
             video = Video.objects.create(
-                video_path=video_url,
+                video_path=local_video_path,
                 title=query[:255],
                 uploaded_by=request.user
             )

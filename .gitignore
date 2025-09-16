@@ -1,6 +1,9 @@
 .env
 **/__pycache__/
 
+# Media files (downloaded videos)
+media/
+
 # Logs
 logs
 *.log
