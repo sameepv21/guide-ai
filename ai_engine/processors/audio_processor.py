@@ -2,6 +2,7 @@ import os
 import whisper
 from moviepy.editor import VideoFileClip
 from pathlib import Path
+import time
 
 # TODO: Use context manager to handle the video and audio files.
 class AudioProcessor:
@@ -15,18 +16,22 @@ class AudioProcessor:
             whisper_model: Size of the Whisper model to use
                           Options: 'tiny', 'base', 'small', 'medium', 'large'
         """
+        self.model_name = whisper_model
         self.whisper_model = whisper.load_model(whisper_model)
     
-    def extract_video_metadata(self, video_path):
+    def extract_video_metadata(self, video_path, save_to_db=False, video_obj=None):
         """
         Process a video file to extract audio and generate transcription.
         
         Args:
             video_path: Path to the video file
+            save_to_db: Whether to save results to database
+            video_obj: Video model instance (required if save_to_db=True)
             
         Returns:
             dict: Contains paths to muted video, extracted audio, and transcription
         """
+        start_time = time.time()
         video_path = Path(video_path)
         
         # Validate video exists
@@ -39,10 +44,32 @@ class AudioProcessor:
         # Generate transcription
         transcription = self._transcribe_audio(audio_path)
         
+        processing_duration = time.time() - start_time
+        
+        # Save to database if requested
+        if save_to_db and video_obj:
+            from ai_engine.models import VideoMetadata
+            from django.conf import settings
+            
+            # Convert absolute paths to relative for database storage
+            relative_audio_path = str(audio_path).replace(str(settings.MEDIA_ROOT) + '/', '')
+            
+            VideoMetadata.objects.update_or_create(
+                video=video_obj,
+                defaults={
+                    'audio_path': relative_audio_path,
+                    'transcription_text': transcription['text'],
+                    'transcription_segments': transcription['segments'],
+                    'whisper_model': self.model_name,  # Store model name
+                    'processing_duration': processing_duration
+                }
+            )
+        
         return {
             'video_path': str(video_path),
             'audio_path': str(audio_path),
-            'transcription': transcription
+            'transcription': transcription,
+            'processing_duration': processing_duration
         }
     
     def _extract_audio(self, video_path):

@@ -58,7 +58,11 @@ def process_video(request):
             # Process audio and transcription for new videos
             full_video_path = settings.MEDIA_ROOT / local_video_path
             processor = AudioProcessor(whisper_model="base")
-            audio_result = processor.process_video(full_video_path)
+            audio_result = processor.extract_video_metadata(
+                full_video_path, 
+                save_to_db=True,  # Save to database
+                video_obj=video   # Pass the Video instance
+            )
         
         # Create new chat for this video
         chat = VideoChat.objects.create(
