@@ -81,7 +81,7 @@ def profile_view(request):
             'firstName': user.first_name,
             'lastName': user.last_name,
             'phoneNumber': user.phone_number,
-            'dateJoined': user.date_joined
+            'dateJoined': user.created_at
         })
     
     elif request.method == 'PUT':

@@ -23,9 +23,17 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractBaseUser, PermissionsMixin):
+    USER_TYPE_CHOICES = [
+        ('COMPANY', 'Company'),
+        ('INDIVIDUAL', 'Individual'),
+    ]
+    
+    user_id = models.AutoField(primary_key=True)
     email = models.EmailField(unique=True, max_length=255)
     first_name = models.CharField(max_length=30, blank=True)
     last_name = models.CharField(max_length=30, blank=True)
+    type = models.CharField(max_length=10, choices=USER_TYPE_CHOICES, default='INDIVIDUAL')
+    created_at = models.DateTimeField(auto_now_add=True)
     phone_number = models.CharField(
         max_length=10,
         validators=[
@@ -39,7 +47,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
-    date_joined = models.DateTimeField(auto_now_add=True)
     
     objects = UserManager()
     

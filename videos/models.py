@@ -3,39 +3,34 @@ from django.conf import settings
 
 
 class Video(models.Model):
-    video_path = models.CharField(max_length=500)
+    video_id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='videos', db_column='user_id')
     title = models.CharField(max_length=255, blank=True)
-    uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='videos')
+    video_path = models.CharField(max_length=500)  # Keep for backward compatibility
     uploaded_at = models.DateTimeField(auto_now_add=True)
+    chunked = models.BooleanField(default=False)
 
     class Meta:
+        db_table = 'videos'
         ordering = ['-uploaded_at']
 
-class VideoChat(models.Model):
-    video = models.ForeignKey(Video, on_delete=models.PROTECT, related_name='chats')
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='video_chats', null=True)
-    chat_history = models.JSONField(default=list)
+
+class VideoChunk(models.Model):
+    chunk_id = models.AutoField(primary_key=True)
+    video = models.ForeignKey(Video, on_delete=models.PROTECT, related_name='chunks', db_column='video_id')
+
+    class Meta:
+        db_table = 'video_chunks'
+
+
+class ChatHistory(models.Model):
+    chat_id = models.AutoField(primary_key=True)
+    video = models.ForeignKey(Video, on_delete=models.PROTECT, related_name='chat_histories', db_column='video_id')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='chat_histories', db_column='user_id')
+    payload = models.JSONField(default=list)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        db_table = 'chat_history'
         ordering = ['-updated_at']
-
-
-class Experiment(models.Model):
-    name = models.CharField(max_length=255)
-    description = models.TextField(blank=True)
-    metadata = models.JSONField(default=dict)
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='experiments')
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ['-created_at']
-
-class Evaluation(models.Model):
-    experiment = models.ForeignKey(Experiment, on_delete=models.PROTECT, related_name='evaluations')
-    results = models.JSONField(default=dict)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ['-created_at']

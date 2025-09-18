@@ -4,21 +4,21 @@ from django.conf import settings
 
 class VideoMetadata(models.Model):
     """Stores extracted metadata from videos including audio and transcription"""
-    video = models.OneToOneField(
+    meta_id = models.AutoField(primary_key=True)
+    video = models.ForeignKey(
         'videos.Video', 
-        on_delete=models.CASCADE, 
-        related_name='metadata'
+        on_delete=models.PROTECT, 
+        related_name='metadata',
+        db_column='video_id'
     )
-    audio_path = models.CharField(max_length=500, help_text="Path to extracted audio file")
-    transcription_text = models.TextField(help_text="Full transcription text")
-    transcription_segments = models.JSONField(
-        default=list, 
-        help_text="Timestamped transcription segments"
+    payload = models.JSONField(
+        default=list,
+        help_text="List containing audio_path, transcription_text, transcription_segments, chunk_id, video_id"
     )
-    whisper_model = models.CharField(
+    transcription_model = models.CharField(
         max_length=20, 
         default='base',
-        help_text="Whisper model used for transcription"
+        help_text="Transcription model used (e.g., Whisper-Base)"
     )
     processing_duration = models.FloatField(
         null=True, 
@@ -29,6 +29,7 @@ class VideoMetadata(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
+        db_table = 'video_metadata'
         verbose_name = "Video Metadata"
         verbose_name_plural = "Video Metadata"
     

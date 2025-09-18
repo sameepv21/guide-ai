@@ -2,6 +2,87 @@
 
 ## Session: September 18, 2025
 
+### Model Cleanup - Removed Experiment and Evaluation Models
+
+#### What Changed:
+- **Removed Models**: Deleted Experiment and Evaluation models from videos/models.py
+- **Admin Updates**: Removed admin registrations for Experiment and Evaluation
+- **Database Diagrams**: Regenerated videos/db_diagram.png and global db_diagram.png
+
+#### Why Changed:
+- These models were not part of the core requirements
+- They were unrelated to the main video processing functionality
+- Simplify the schema to focus on core features (users, videos, chunks, chat history, metadata)
+
+#### Result:
+- Cleaner, more focused database schema
+- Only core models remain: User, Video, VideoChunk, ChatHistory, VideoMetadata
+- Simplified codebase without unnecessary experimental features
+
+### Database Schema Diagrams Regeneration
+
+#### What Changed:
+- **users/db_diagram.png**: Regenerated to reflect User model updates (user_id, type field, created_at)
+- **videos/db_diagram.png**: Regenerated to show Video, VideoChunk, ChatHistory models with new schema
+- **ai_engine/db_diagram.png**: Regenerated to show VideoMetadata with payload structure
+- **db_diagram.png (global)**: Regenerated to show complete schema relationships across all apps
+
+#### Why Changed:
+- Database schema underwent major restructuring
+- Need visual documentation to reflect current state
+- Ensure diagrams match actual database structure
+
+#### Result:
+- All diagrams accurately represent the new schema
+- Visual documentation updated for developers
+- Clear representation of model relationships and new fields
+
+### Code Quality Improvement - Import Organization
+
+#### What Changed:
+- **audio_processor.py**: Moved all imports from inside functions to the top of the file
+- Organized imports following Python conventions (stdlib, third-party, local)
+- Removed duplicate import statements from within the `extract_video_metadata` function
+
+#### Why Changed:
+- Follow Python best practices and PEP 8 guidelines
+- Improve code readability and maintainability
+- Reduce import overhead (imports at module level are executed once)
+- Make dependencies clear at the beginning of the file
+
+#### Result:
+- Cleaner, more maintainable code structure
+- All imports properly organized at the top of files
+- Better performance (imports executed once at module load)
+
+### Major Database Schema Restructuring
+
+#### What Changed:
+- **User Model**: Added `type` field with choices ('COMPANY', 'INDIVIDUAL') and renamed `date_joined` to `created_at`
+- **Video Model**: Added `chunked` boolean field, renamed `uploaded_by` to `user`, added explicit `video_id` primary key
+- **VideoChunk Model**: Created new model to support video chunking with `chunk_id` and relationship to Video
+- **ChatHistory Model**: Renamed from VideoChat, changed `chat_history` to `payload` field, added explicit `chat_id` primary key
+- **VideoMetadata Model**: Restructured to use `payload` JSONField instead of separate fields, renamed `whisper_model` to `transcription_model`
+- **Admin Interface**: Updated all admin configurations to reflect new field names and model structures
+- **Views**: Updated all view functions to use new model names and field structures
+- **Audio Processor**: Modified to save metadata in new payload format
+
+#### Why Changed:
+- Standardize naming conventions across all models (user_id, video_id, chat_id, meta_id)
+- Support future video chunking capabilities with dedicated VideoChunk model
+- Flexible payload structure for ChatHistory and VideoMetadata allows for extensibility
+- User type field enables differentiation between company and individual users
+- Consistent timestamp naming (created_at, updated_at) across all models
+- Better alignment with database best practices and naming conventions
+
+#### Result:
+- Database schema now follows consistent naming conventions
+- Ready for video chunking feature implementation
+- More flexible data storage with JSON payload fields
+- All existing functionality preserved with updated field names
+- Improved data model clarity and maintainability
+- Foundation for future scalability improvements
+
 ### Feature Addition - Database Schema Diagrams
 
 #### What Changed:

@@ -1,7 +1,7 @@
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from videos.models import Video, VideoChat
+from videos.models import Video, ChatHistory
 from videos.utils import download_youtube_video
 from ai_engine.processors.audio_processor import AudioProcessor
 from pathlib import Path
@@ -29,10 +29,10 @@ def process_video(request):
     
     # Check if we're continuing an existing chat or starting a new one
     if chat_id:
-        chat = VideoChat.objects.filter(id=chat_id, user=request.user).first()
+        chat = ChatHistory.objects.filter(chat_id=chat_id, user=request.user).first()
         if chat:
             # Append to existing chat history
-            chat.chat_history.append({'query': query, 'response': None})
+            chat.payload.append({'query': query, 'response': None})
             video = chat.video
         else:
             chat_id = None
@@ -44,7 +44,7 @@ def process_video(request):
         # Check if video already exists for this user (by local path now)
         video = Video.objects.filter(
             video_path=local_video_path,
-            uploaded_by=request.user
+            user=request.user
         ).first()
         
         if not video:
@@ -52,7 +52,7 @@ def process_video(request):
             video = Video.objects.create(
                 video_path=local_video_path,
                 title=query[:255],
-                uploaded_by=request.user
+                user=request.user
             )
             
             # Process audio and transcription for new videos
@@ -65,15 +65,15 @@ def process_video(request):
             )
         
         # Create new chat for this video
-        chat = VideoChat.objects.create(
+        chat = ChatHistory.objects.create(
             video=video,
             user=request.user,
-            chat_history=[{'query': query, 'response': None}]
+            payload=[{'query': query, 'response': None}]
         )
     
     # Template response
     response_data = {
-        'chatId': chat.id,
+        'chatId': chat.chat_id,
         'response': f"Based on the video analysis, here's what I found regarding your query: '{query}'. The video shows relevant content that addresses your question. Key insights include understanding of the main topic, visual elements, and contextual information.",
         'reasoning': "I analyzed the video frame by frame, extracting visual features and understanding the context. The analysis involved scene detection, object recognition, and temporal understanding to provide a comprehensive answer to your query.",
         'keyFrames': [
@@ -102,7 +102,7 @@ def process_video(request):
     }
     
     # Update chat history with response
-    chat.chat_history[-1]['response'] = response_data
+    chat.payload[-1]['response'] = response_data
     chat.save()
     
     return Response(response_data, status=status.HTTP_200_OK)
@@ -110,18 +110,18 @@ def process_video(request):
 
 @api_view(['GET'])
 def get_chat_history(request):
-    chats = VideoChat.objects.filter(user=request.user).select_related('video')
+    chats = ChatHistory.objects.filter(user=request.user).select_related('video')
     
     history = []
     for chat in chats:
         history.append({
-            'id': chat.id,
+            'id': chat.chat_id,
             'videoUrl': chat.video.video_path,
             'videoTitle': chat.video.title,
-            'lastMessage': chat.chat_history[-1]['query'] if chat.chat_history else '',
+            'lastMessage': chat.payload[-1]['query'] if chat.payload else '',
             'updatedAt': chat.updated_at.isoformat(),
-            'messageCount': len(chat.chat_history),
-            'chat_history': chat.chat_history  # Include full chat history for loading
+            'messageCount': len(chat.payload),
+            'chat_history': chat.payload  # Include full chat history for loading
         })
     
     return Response({'chats': history}, status=status.HTTP_200_OK)

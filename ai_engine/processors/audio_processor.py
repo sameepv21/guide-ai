@@ -1,8 +1,13 @@
 import os
+import time
+from pathlib import Path
+
 import whisper
 from moviepy.editor import VideoFileClip
-from pathlib import Path
-import time
+from django.conf import settings
+
+from ai_engine.models import VideoMetadata
+from videos.models import VideoChunk
 
 # TODO: Use context manager to handle the video and audio files.
 class AudioProcessor:
@@ -48,22 +53,42 @@ class AudioProcessor:
         
         # Save to database if requested
         if save_to_db and video_obj:
-            from ai_engine.models import VideoMetadata
-            from django.conf import settings
-            
             # Convert absolute paths to relative for database storage
             relative_audio_path = str(audio_path).replace(str(settings.MEDIA_ROOT) + '/', '')
             
-            VideoMetadata.objects.update_or_create(
-                video=video_obj,
-                defaults={
-                    'audio_path': relative_audio_path,
-                    'transcription_text': transcription['text'],
-                    'transcription_segments': transcription['segments'],
-                    'whisper_model': self.model_name,  # Store model name
-                    'processing_duration': processing_duration
-                }
-            )
+            # Get or create video chunk (one per non-chunked video, multiple for chunked)
+            video_chunk, created = VideoChunk.objects.get_or_create(video=video_obj)
+            
+            # Create the chunk metadata payload
+            chunk_data = {
+                'audio_path': relative_audio_path,
+                'transcription_text': transcription['text'],
+                'transcription_segments': transcription['segments'],
+                'chunk_id': video_chunk.chunk_id,
+            }
+            
+            # Save metadata - either append to existing or create new
+            if video_obj.chunked:
+                # For chunked videos, append to existing metadata
+                metadata, created = VideoMetadata.objects.get_or_create(
+                    video=video_obj,
+                    defaults={
+                        'payload': [],
+                        'transcription_model': self.model_name,
+                        'processing_duration': 0
+                    }
+                )
+                metadata.payload.append(chunk_data)
+                metadata.processing_duration += processing_duration
+                metadata.save()
+            else:
+                # For non-chunked videos, create new metadata with single entry
+                VideoMetadata.objects.create(
+                    video=video_obj,
+                    payload=[chunk_data],
+                    transcription_model=self.model_name,
+                    processing_duration=processing_duration
+                )
         
         return {
             'video_path': str(video_path),
