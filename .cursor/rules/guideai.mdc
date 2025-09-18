@@ -315,6 +315,16 @@ Currently, the system returns template responses with:
 - `created_at` - DateTimeField
 - `updated_at` - DateTimeField
 
+#### ai_engine.VideoMetadata
+- `video` - OneToOneField to Video (CASCADE)
+- `audio_path` - CharField (path to extracted audio file)
+- `transcription_text` - TextField (full transcription text)
+- `transcription_segments` - JSONField (timestamped transcription segments)
+- `whisper_model` - CharField (Whisper model used, default 'base')
+- `processing_duration` - FloatField (processing time in seconds)
+- `created_at` - DateTimeField
+- `updated_at` - DateTimeField
+
 ## File Structure
 
 ```

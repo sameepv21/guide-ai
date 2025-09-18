@@ -1,5 +1,28 @@
 # Guide AI - Change Log
 
+## Session: September 18, 2025
+
+### Feature Addition - Database Schema Diagrams
+
+#### What Changed:
+- **Django Extensions**: Added django-extensions package for enhanced Django management commands
+- **Schema Diagrams**: Generated comprehensive database schema diagrams in PNG format
+- **Global Diagram**: Created `db_diagram.png` showing all applications and their relationships
+- **Individual Diagrams**: Created separate diagrams for users, videos, and ai_engine apps
+- **Dependencies**: Added pydotplus and Graphviz for diagram generation
+- **Documentation**: Updated guideai.mdc with schema diagram documentation and generation commands
+
+#### Why Changed:
+- Improved developer experience with visual database schema representation
+- Better understanding of model relationships and database structure
+- Documentation enhancement for current and future developers
+- Automated diagram generation for easy maintenance when models change
+
+#### Results:
+- Four PNG diagram files created (global + 3 individual apps)
+- Complete documentation of database relationships and generation commands
+- Easy regeneration process for future model changes
+
 ## Session: September 16, 2025
 
 ### Feature Addition - Audio Extraction and Transcription with Database Storage
