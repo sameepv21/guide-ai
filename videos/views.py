@@ -2,11 +2,15 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from videos.models import Video, ChatHistory
-from videos.utils import download_youtube_video
+from videos.utils import download_youtube_video, chunk_video_if_needed
 from ai_engine.processors.audio_processor import AudioProcessor
 from pathlib import Path
 from django.conf import settings
 import re
+import os
+import time
+from moviepy.editor import AudioFileClip, concatenate_audioclips
+from ai_engine.models import VideoMetadata
 
 
 @api_view(['POST'])
@@ -38,32 +42,77 @@ def process_video(request):
             chat_id = None
     
     if not chat_id:
-        # Download video and save to user directory
-        local_video_path = download_youtube_video(video_url, request.user.id)
+        # Create a new Video object to get an ID
+        video = Video.objects.create(
+            title=query[:255], # TODO: Dynamically update the title based on the question
+            user=request.user,
+            video_path=''  # Placeholder, will be updated after download
+        )
+
+        # Download video and save to user/video-specific directory
+        local_video_path = download_youtube_video(video_url, request.user.user_id, video.video_id)
         
-        # Check if video already exists for this user (by local path now)
-        video = Video.objects.filter(
-            video_path=local_video_path,
-            user=request.user
-        ).first()
-        
-        if not video:
-            # Create new video only if it doesn't exist
-            video = Video.objects.create(
-                video_path=local_video_path,
-                title=query[:255],
-                user=request.user
+        # Update video path
+        video.video_path = local_video_path
+        video.save()
+
+        was_chunked = chunk_video_if_needed(video)
+        processor = AudioProcessor(whisper_model="base")
+
+        if was_chunked:
+            video_dir = Path(settings.MEDIA_ROOT) / str(video.user.user_id) / str(video.video_id)
+            chunks_dir = video_dir / "chunks"
+
+            audio_paths_to_cleanup = []
+            payload_list = []
+            total_processing_duration = 0
+            for i, chunk in enumerate(video.chunks.all().order_by('chunk_id')):
+                start_time = time.time()
+                chunk_path = chunks_dir / f"chunk_{i:04d}.mp4"
+                
+                audio_path = processor.extract_audio(chunk_path)
+                audio_paths_to_cleanup.append(audio_path)
+                
+                transcription_result = processor.transcribe_audio(Path(audio_path))
+                total_processing_duration += time.time() - start_time
+                
+                payload_list.append({
+                    "audio_path": os.path.relpath(audio_path, settings.MEDIA_ROOT),
+                    "transcription_text": transcription_result['text'],
+                    "transcription_segments": transcription_result['segments'],
+                    "chunk_id": chunk.chunk_id
+                })
+
+            VideoMetadata.objects.create(
+                video=video,
+                payload=payload_list,
+                transcription_model=processor.model.name,
+                processing_duration=total_processing_duration,
             )
             
-            # Process audio and transcription for new videos
+            for path in audio_paths_to_cleanup:
+                os.remove(path)
+        else:
+            # Process the whole video
+            start_time = time.time()
             full_video_path = settings.MEDIA_ROOT / local_video_path
-            processor = AudioProcessor(whisper_model="base")
-            audio_result = processor.extract_video_metadata(
-                full_video_path, 
-                save_to_db=True,  # Save to database
-                video_obj=video   # Pass the Video instance
+            
+            audio_path = processor.extract_audio(full_video_path)
+            transcription_result = processor.transcribe_audio(Path(audio_path))
+            processing_duration = time.time() - start_time
+
+            VideoMetadata.objects.create(
+                video=video,
+                payload=[{
+                    "audio_path": os.path.relpath(audio_path, settings.MEDIA_ROOT),
+                    "transcription_text": transcription_result['text'],
+                    "transcription_segments": transcription_result['segments'],
+                }],
+                transcription_model=processor.model.name,
+                processing_duration=processing_duration,
             )
-        
+            os.remove(audio_path)
+            
         # Create new chat for this video
         chat = ChatHistory.objects.create(
             video=video,

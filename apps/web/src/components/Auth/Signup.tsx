@@ -49,7 +49,7 @@ export default function Signup({ setIsAuthenticated }: SignupProps) {
         if (err.response?.status === 400) {
           setError(err.response?.data?.error || 'Email already exists');
         } else if (err.response?.status >= 500) {
-          setError('Server error. Please try again later');
+          setError("Server error --> That's on us. We have been notified and will fix it soon.");
         } else {
           setError('Unable to sign up. Please check your connection');
         }

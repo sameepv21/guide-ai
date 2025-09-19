@@ -31,7 +31,7 @@ export default function Login({ setIsAuthenticated }: LoginProps) {
         } else if (err.response?.status === 401) {
           setError('Incorrect password');
         } else if (err.response?.status >= 500) {
-          setError('Server error. Please try again later');
+          setError("Server error --> That's on us. We have been notified and will fix it soon.");
         } else {
           setError('Unable to login. Please check your connection');
         }

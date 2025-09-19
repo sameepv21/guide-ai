@@ -20,4 +20,5 @@ class ChatHistoryAdmin(admin.ModelAdmin):
 @admin.register(VideoChunk)
 class VideoChunkAdmin(admin.ModelAdmin):
     list_display = ['chunk_id', 'video']
+    list_filter = ['video']
     search_fields = ['video__title']

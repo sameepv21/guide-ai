@@ -12,7 +12,7 @@
 #### Why Changed:
 - These models were not part of the core requirements
 - They were unrelated to the main video processing functionality
-- Simplify the schema to focus on core features (users, videos, chunks, chat history, metadata)
+- Simplify the schema to focus on core features (users, videos, chat history, metadata)
 
 #### Result:
 - Cleaner, more focused database schema
@@ -59,8 +59,8 @@
 
 #### What Changed:
 - **User Model**: Added `type` field with choices ('COMPANY', 'INDIVIDUAL') and renamed `date_joined` to `created_at`
-- **Video Model**: Added `chunked` boolean field, renamed `uploaded_by` to `user`, added explicit `video_id` primary key
-- **VideoChunk Model**: Created new model to support video chunking with `chunk_id` and relationship to Video
+- **Video Model**: Added `chunked` boolean field, renamed `uploaded_by` to `user`, added explicit `video_id` primary key, added `get_chunk_paths()` method
+- **VideoChunk Model**: Created minimal model with only `chunk_id` and `video` foreign key for tracking video chunks
 - **ChatHistory Model**: Renamed from VideoChat, changed `chat_history` to `payload` field, added explicit `chat_id` primary key
 - **VideoMetadata Model**: Restructured to use `payload` JSONField instead of separate fields, renamed `whisper_model` to `transcription_model`
 - **Admin Interface**: Updated all admin configurations to reflect new field names and model structures
@@ -69,7 +69,7 @@
 
 #### Why Changed:
 - Standardize naming conventions across all models (user_id, video_id, chat_id, meta_id)
-- Support future video chunking capabilities with dedicated VideoChunk model
+- Support video chunking capabilities with dedicated VideoChunk model
 - Flexible payload structure for ChatHistory and VideoMetadata allows for extensibility
 - User type field enables differentiation between company and individual users
 - Consistent timestamp naming (created_at, updated_at) across all models
@@ -77,7 +77,7 @@
 
 #### Result:
 - Database schema now follows consistent naming conventions
-- Ready for video chunking feature implementation
+- Ready for video chunking feature with VideoChunk model
 - More flexible data storage with JSON payload fields
 - All existing functionality preserved with updated field names
 - Improved data model clarity and maintainability
@@ -103,6 +103,31 @@
 - Four PNG diagram files created (global + 3 individual apps)
 - Complete documentation of database relationships and generation commands
 - Easy regeneration process for future model changes
+
+### Video Chunking Implementation and Bug Fixes
+
+#### What Changed:
+- **Chunk Processing**: Implemented video chunking for files >5 minutes into 5-minute segments
+- **File Naming Convention**: Chunks saved as `chunk_000.mp4`, `chunk_001.mp4` (3-digit zero-padded)
+- **Path Derivation**: Chunk paths derived from convention, not stored in database
+- **Bug Fix**: Fixed chunk path construction in views - was using `{chunk.chunk_id}.mp4` instead of `chunk_{index:03d}.mp4`
+- **Bug Fix**: Fixed user ID reference - was using `video.user.id` instead of `video.user.user_id`
+- **VS Code Debug Config**: Fixed DJANGO_SETTINGS_MODULE from `config.settings.local` to `backend.settings`
+
+#### Why Changed:
+- Support processing of long videos by splitting into manageable chunks
+- Consistent naming convention for easy file management
+- Minimal database storage by deriving paths from conventions
+- Fixed critical path mismatch between chunk creation and chunk retrieval
+- Corrected user model field reference for proper path construction
+- Debug configuration had incorrect Django settings module path
+
+#### Result:
+- Videos >5 minutes automatically split into 5-minute chunks
+- Every video has at least one VideoChunk entry for consistency
+- Chunk paths predictable and derivable from conventions
+- Chunks now properly saved in media directory with correct naming
+- Debugging in VS Code now works correctly
 
 ## Session: September 16, 2025
 

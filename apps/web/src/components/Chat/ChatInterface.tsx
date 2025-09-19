@@ -161,7 +161,7 @@ export default function ChatInterface({ setIsAuthenticated }: ChatInterfaceProps
         } else if (err.response?.status === 400 && err.response?.data?.error) {
           setError(err.response.data.error);
         } else if (err.response?.status >= 500) {
-          setError('Server error. Please try again later');
+          setError("Server error --> That's on us. We have been notified and will fix it soon.");
         } else {
           setError('Failed to process video. Please check your connection and try again');
         }
