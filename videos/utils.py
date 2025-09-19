@@ -72,8 +72,24 @@ def chunk_video_if_needed(video_obj):
     duration_data = json.loads(result.stdout)
     duration = float(duration_data['format']['duration'])
 
-    # If video is 5 minutes or less, create single chunk entry
+    # If video is 5 minutes or less, create single chunk in chunks folder
     if duration <= 300:  # 300 seconds = 5 minutes
+        # Create chunks directory
+        video_dir = video_path.parent
+        chunks_dir = video_dir / "chunks"
+        chunks_dir.mkdir(exist_ok=True)
+        
+        # Create muted video as chunk_0000.mp4
+        chunk_path = chunks_dir / "chunk_0000.mp4"
+        cmd = [
+            'ffmpeg', '-i', str(video_path),
+            '-an',  # Remove audio
+            '-c:v', 'copy',  # Copy video stream
+            '-y',
+            str(chunk_path)
+        ]
+        subprocess.run(cmd, capture_output=True, check=True)
+        
         VideoChunk.objects.create(video=video_obj)
         return False  # Not chunked
 
@@ -86,18 +102,19 @@ def chunk_video_if_needed(video_obj):
     chunks_dir = video_dir / "chunks"
     chunks_dir.mkdir(exist_ok=True)
 
-    # Create chunks using ffmpeg
+    # Create chunks using ffmpeg (muted videos)
     for i in range(num_chunks):
         start_time = i * chunk_duration
         chunk_filename = f"chunk_{i:04d}.mp4"
         chunk_path = chunks_dir / chunk_filename
         
-        # Use ffmpeg to extract chunk (stream copy for speed)
+        # Extract chunk WITHOUT audio (muted)
         cmd = [
             'ffmpeg', '-i', str(video_path),
             '-ss', str(start_time),
             '-t', str(chunk_duration),
-            '-c', 'copy',  # Copy streams without re-encoding
+            '-an',  # Remove audio
+            '-c:v', 'copy',  # Copy video stream
             '-avoid_negative_ts', 'make_zero',
             '-y',  # Overwrite if exists
             str(chunk_path)

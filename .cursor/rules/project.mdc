@@ -14,3 +14,4 @@ alwaysApply: true
 - You should also change and update the CHANGELOG.md as well. This is a file that essentially keeps tracks of what are the changes that are made and whether they are bug fixes or feature changes.
 - Note that you should mention why this change was made, what was the change that was made and what are results of this change.
 - Lastly, in CHANGELOG.md, you should just club all the details for 1 day. This means that for each of the day, there should be just one entry that corresponds to the logs.
+- You are required to access the current date in the local timezone but if not able to find it, you should default to date in PDT timezone always.

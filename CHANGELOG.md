@@ -116,6 +116,7 @@
 - **Migration Cleanup**: Combined ai_engine's two initial migrations into one
 - **Code Quality**: Moved all imports to top of files (videos/utils.py, videos/models.py, ai_engine/test_audio.py)
 - **API Usage Fix**: Updated views.py to use public `extract_video_metadata()` method instead of private methods
+- **Video Chunk Architecture**: Chunks are now muted videos with separate audio files in chunks folder
 
 #### Why Changed:
 - Support processing of long videos by splitting into manageable chunks
@@ -128,6 +129,7 @@
 - Simplified migration structure by merging redundant split migrations
 - Follow Python best practices by keeping all imports at the top of modules
 - Private methods should not be called directly; use the public API
+- Chunks as muted videos prevent audio duplication and simplify processing
 
 #### Result:
 - Videos >5 minutes automatically split into 5-minute chunks without errors
@@ -140,6 +142,9 @@
 - Cleaner migration history with single initial migration for ai_engine
 - Improved code quality with all imports at module level
 - Cleaner code using proper public API methods
+- Clean architecture: Original video preserved, chunks folder contains muted videos + audio files
+- Single video: chunks/chunk_0000.mp4 (muted) + chunk_0000.mp3 (audio)  
+- Multiple chunks: chunks/chunk_XXXX.mp4 (muted) + chunk_XXXX.mp3 (audio) for each segment
 
 ## Session: September 16, 2025
 

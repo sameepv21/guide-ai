@@ -8,7 +8,7 @@ from pathlib import Path
 from django.conf import settings
 import re
 import os
-from moviepy.editor import AudioFileClip, concatenate_audioclips
+from moviepy.editor import VideoFileClip, AudioFileClip, concatenate_audioclips
 from ai_engine.models import VideoMetadata
 
 
@@ -75,21 +75,36 @@ def process_video(request):
             )
             chunks_dir = video_dir / "chunks"
 
-            audio_paths_to_cleanup = []
             payload_list = []
-            total_processing_duration = 0
+            
+            # Get original video path for audio extraction
+            original_video_path = Path(settings.MEDIA_ROOT) / video.video_path
+            
             for i, chunk in enumerate(video.chunks.all().order_by("chunk_id")):
                 chunk_path = chunks_dir / f"chunk_{i:04d}.mp4"
                 
-                result = processor.extract_video_metadata(chunk_path)
-                audio_paths_to_cleanup.append(result["audio_path"])
-                total_processing_duration += result["processing_duration"]
+                # Extract audio from ORIGINAL video for this time segment
+                # Chunk videos are already muted
+                start_time = i * 300  # 5 minutes per chunk
+                
+                # Use AudioProcessor to extract audio from original video segment
+                # For now, extract from the full original and use that
+                audio_path = chunk_path.with_suffix(".mp3")
+                video_clip = VideoFileClip(str(original_video_path))
+                audio_clip = video_clip.subclip(start_time, min((i+1) * 300, video_clip.duration)).audio
+                audio_clip.write_audiofile(str(audio_path), logger=None)
+                video_clip.close()
+                audio_clip.close()
+                
+                # Transcribe the audio (using private method as no public API for just transcription)
+                transcription = processor._transcribe_audio(audio_path)
 
                 payload_list.append(
                     {
-                        "audio_path": os.path.relpath(result["audio_path"], settings.MEDIA_ROOT),
-                        "transcription_text": result["transcription"]["text"],
-                        "transcription_segments": result["transcription"]["segments"],
+                        "audio_path": os.path.relpath(audio_path, settings.MEDIA_ROOT),
+                        "video_path": os.path.relpath(chunk_path, settings.MEDIA_ROOT),
+                        "transcription_text": transcription["text"],
+                        "transcription_segments": transcription["segments"],
                         "chunk_id": chunk.chunk_id,
                     }
                 )
@@ -98,30 +113,43 @@ def process_video(request):
                 video=video,
                 payload=payload_list,
                 transcription_model=processor.model_name,
-                processing_duration=total_processing_duration,
+                processing_duration=0,  # TODO: Track actual processing time
             )
 
-            for path in audio_paths_to_cleanup:
-                os.remove(path)
+            # Keep audio files in chunks folder for future use
         else:
-            # Process the whole video
-            full_video_path = settings.MEDIA_ROOT / local_video_path
+            # Process the single chunk video
+            # The muted video is already in chunks/chunk_0000.mp4
+            full_video_path = Path(settings.MEDIA_ROOT) / video.video_path
+            chunks_dir = full_video_path.parent / "chunks"
+            chunk_path = chunks_dir / "chunk_0000.mp4"
+            audio_path = chunk_path.with_suffix(".mp3")
             
-            result = processor.extract_video_metadata(full_video_path)
+            # Extract audio from original video and save in chunks folder
+            video_clip = VideoFileClip(str(full_video_path))
+            audio_clip = video_clip.audio
+            audio_clip.write_audiofile(str(audio_path), logger=None)
+            video_clip.close()
+            audio_clip.close()
+            
+            # Transcribe the audio (using private method as no public API for just transcription)
+            transcription = processor._transcribe_audio(audio_path)
 
             VideoMetadata.objects.create(
                 video=video,
                 payload=[
                     {
-                        "audio_path": os.path.relpath(result["audio_path"], settings.MEDIA_ROOT),
-                        "transcription_text": result["transcription"]["text"],
-                        "transcription_segments": result["transcription"]["segments"],
+                        "audio_path": os.path.relpath(audio_path, settings.MEDIA_ROOT),
+                        "muted_video_path": os.path.relpath(chunk_path, settings.MEDIA_ROOT),
+                        "transcription_text": transcription["text"],
+                        "transcription_segments": transcription["segments"],
                     }
                 ],
                 transcription_model=processor.model_name,
-                processing_duration=result["processing_duration"],
+                processing_duration=0,  # TODO: Track actual processing time
             )
-            os.remove(result["audio_path"])
+            
+            # Keep audio file in chunks folder for future use
 
         # Create new chat for this video
         chat = ChatHistory.objects.create(
