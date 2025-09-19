@@ -107,27 +107,39 @@
 ### Video Chunking Implementation and Bug Fixes
 
 #### What Changed:
-- **Chunk Processing**: Implemented video chunking for files >5 minutes into 5-minute segments
-- **File Naming Convention**: Chunks saved as `chunk_000.mp4`, `chunk_001.mp4` (3-digit zero-padded)
+- **Chunk Processing**: Replaced MoviePy with FFmpeg for video chunking (>5 minutes into 5-minute segments)
+- **File Naming Convention**: Chunks saved as `chunk_0000.mp4`, `chunk_0001.mp4` (4-digit zero-padded)
 - **Path Derivation**: Chunk paths derived from convention, not stored in database
-- **Bug Fix**: Fixed chunk path construction in views - was using `{chunk.chunk_id}.mp4` instead of `chunk_{index:03d}.mp4`
 - **Bug Fix**: Fixed user ID reference - was using `video.user.id` instead of `video.user.user_id`
+- **FFmpeg Implementation**: Replaced MoviePy with direct FFmpeg calls for reliable chunking
 - **VS Code Debug Config**: Fixed DJANGO_SETTINGS_MODULE from `config.settings.local` to `backend.settings`
+- **Migration Cleanup**: Combined ai_engine's two initial migrations into one
+- **Code Quality**: Moved all imports to top of files (videos/utils.py, videos/models.py, ai_engine/test_audio.py)
+- **API Usage Fix**: Updated views.py to use public `extract_video_metadata()` method instead of private methods
 
 #### Why Changed:
 - Support processing of long videos by splitting into manageable chunks
 - Consistent naming convention for easy file management
 - Minimal database storage by deriving paths from conventions
-- Fixed critical path mismatch between chunk creation and chunk retrieval
 - Corrected user model field reference for proper path construction
+- MoviePy had issues with audio buffer corruption when processing multiple chunks
+- FFmpeg provides more reliable and faster chunking with stream copying
 - Debug configuration had incorrect Django settings module path
+- Simplified migration structure by merging redundant split migrations
+- Follow Python best practices by keeping all imports at the top of modules
+- Private methods should not be called directly; use the public API
 
 #### Result:
-- Videos >5 minutes automatically split into 5-minute chunks
+- Videos >5 minutes automatically split into 5-minute chunks without errors
+- Clean, minimalistic FFmpeg-based solution in utils.py
+- Stream copying (no re-encoding) for fast chunk creation
 - Every video has at least one VideoChunk entry for consistency
 - Chunk paths predictable and derivable from conventions
-- Chunks now properly saved in media directory with correct naming
+- Chunks properly saved in media directory with correct naming
 - Debugging in VS Code now works correctly
+- Cleaner migration history with single initial migration for ai_engine
+- Improved code quality with all imports at module level
+- Cleaner code using proper public API methods
 
 ## Session: September 16, 2025
 

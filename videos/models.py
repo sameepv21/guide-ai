@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from pathlib import Path
 
 
 class Video(models.Model):
@@ -17,8 +18,6 @@ class Video(models.Model):
 
     def get_chunk_paths(self):
         """Returns list of chunk paths based on VideoChunk entries."""
-        from pathlib import Path
-
         if not self.chunked:
             # Single chunk - return original video path
             return [self.video_path]

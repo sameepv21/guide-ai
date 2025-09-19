@@ -8,7 +8,6 @@ from pathlib import Path
 from django.conf import settings
 import re
 import os
-import time
 from moviepy.editor import AudioFileClip, concatenate_audioclips
 from ai_engine.models import VideoMetadata
 
@@ -80,20 +79,17 @@ def process_video(request):
             payload_list = []
             total_processing_duration = 0
             for i, chunk in enumerate(video.chunks.all().order_by("chunk_id")):
-                start_time = time.time()
                 chunk_path = chunks_dir / f"chunk_{i:04d}.mp4"
-
-                audio_path = processor.extract_audio(chunk_path)
-                audio_paths_to_cleanup.append(audio_path)
-
-                transcription_result = processor.transcribe_audio(Path(audio_path))
-                total_processing_duration += time.time() - start_time
+                
+                result = processor.extract_video_metadata(chunk_path)
+                audio_paths_to_cleanup.append(result["audio_path"])
+                total_processing_duration += result["processing_duration"]
 
                 payload_list.append(
                     {
-                        "audio_path": os.path.relpath(audio_path, settings.MEDIA_ROOT),
-                        "transcription_text": transcription_result["text"],
-                        "transcription_segments": transcription_result["segments"],
+                        "audio_path": os.path.relpath(result["audio_path"], settings.MEDIA_ROOT),
+                        "transcription_text": result["transcription"]["text"],
+                        "transcription_segments": result["transcription"]["segments"],
                         "chunk_id": chunk.chunk_id,
                     }
                 )
@@ -101,7 +97,7 @@ def process_video(request):
             VideoMetadata.objects.create(
                 video=video,
                 payload=payload_list,
-                transcription_model=processor.model.name,
+                transcription_model=processor.model_name,
                 processing_duration=total_processing_duration,
             )
 
@@ -109,26 +105,23 @@ def process_video(request):
                 os.remove(path)
         else:
             # Process the whole video
-            start_time = time.time()
             full_video_path = settings.MEDIA_ROOT / local_video_path
-
-            audio_path = processor.extract_audio(full_video_path)
-            transcription_result = processor.transcribe_audio(Path(audio_path))
-            processing_duration = time.time() - start_time
+            
+            result = processor.extract_video_metadata(full_video_path)
 
             VideoMetadata.objects.create(
                 video=video,
                 payload=[
                     {
-                        "audio_path": os.path.relpath(audio_path, settings.MEDIA_ROOT),
-                        "transcription_text": transcription_result["text"],
-                        "transcription_segments": transcription_result["segments"],
+                        "audio_path": os.path.relpath(result["audio_path"], settings.MEDIA_ROOT),
+                        "transcription_text": result["transcription"]["text"],
+                        "transcription_segments": result["transcription"]["segments"],
                     }
                 ],
-                transcription_model=processor.model.name,
-                processing_duration=processing_duration,
+                transcription_model=processor.model_name,
+                processing_duration=result["processing_duration"],
             )
-            os.remove(audio_path)
+            os.remove(result["audio_path"])
 
         # Create new chat for this video
         chat = ChatHistory.objects.create(
