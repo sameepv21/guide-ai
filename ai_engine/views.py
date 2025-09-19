@@ -8,16 +8,16 @@ from django.conf import settings
 import json
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 def extract_video_audio(request):
     """
     Process a video to extract audio and generate transcription.
-    
+
     Expected request body:
     {
         "video_path": "path/to/video.mp4"
     }
-    
+
     Returns:
     {
         "video_path": "path/to/original/video.mp4",
@@ -34,19 +34,21 @@ def extract_video_audio(request):
         }
     }
     """
-    video_path = request.data.get('video_path')
-    
+    video_path = request.data.get("video_path")
+
     if not video_path:
-        return Response({'error': 'video_path is required'}, status=status.HTTP_400_BAD_REQUEST)
-    
+        return Response(
+            {"error": "video_path is required"}, status=status.HTTP_400_BAD_REQUEST
+        )
+
     # Convert relative path to absolute if needed
     if not Path(video_path).is_absolute():
         video_path = settings.MEDIA_ROOT / video_path
-    
+
     # Initialize processor
     processor = AudioProcessor(whisper_model="base")
-    
+
     # Process the video
     result = processor.extract_video_metadata(video_path)
-    
+
     return Response(result, status=status.HTTP_200_OK)

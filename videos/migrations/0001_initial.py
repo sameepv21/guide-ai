@@ -15,43 +15,75 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Video',
+            name="Video",
             fields=[
-                ('video_id', models.AutoField(primary_key=True, serialize=False)),
-                ('title', models.CharField(blank=True, max_length=255)),
-                ('video_path', models.CharField(max_length=500)),
-                ('uploaded_at', models.DateTimeField(auto_now_add=True)),
-                ('chunked', models.BooleanField(default=False)),
-                ('user', models.ForeignKey(db_column='user_id', on_delete=django.db.models.deletion.PROTECT, related_name='videos', to=settings.AUTH_USER_MODEL)),
+                ("video_id", models.AutoField(primary_key=True, serialize=False)),
+                ("title", models.CharField(blank=True, max_length=255)),
+                ("video_path", models.CharField(max_length=500)),
+                ("uploaded_at", models.DateTimeField(auto_now_add=True)),
+                ("chunked", models.BooleanField(default=False)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        db_column="user_id",
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="videos",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'db_table': 'videos',
-                'ordering': ['-uploaded_at'],
+                "db_table": "videos",
+                "ordering": ["-uploaded_at"],
             },
         ),
         migrations.CreateModel(
-            name='ChatHistory',
+            name="ChatHistory",
             fields=[
-                ('chat_id', models.AutoField(primary_key=True, serialize=False)),
-                ('payload', models.JSONField(default=list)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('user', models.ForeignKey(db_column='user_id', on_delete=django.db.models.deletion.PROTECT, related_name='chat_histories', to=settings.AUTH_USER_MODEL)),
-                ('video', models.ForeignKey(db_column='video_id', on_delete=django.db.models.deletion.PROTECT, related_name='chat_histories', to='videos.video')),
+                ("chat_id", models.AutoField(primary_key=True, serialize=False)),
+                ("payload", models.JSONField(default=list)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        db_column="user_id",
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="chat_histories",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "video",
+                    models.ForeignKey(
+                        db_column="video_id",
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="chat_histories",
+                        to="videos.video",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'chat_history',
-                'ordering': ['-updated_at'],
+                "db_table": "chat_history",
+                "ordering": ["-updated_at"],
             },
         ),
         migrations.CreateModel(
-            name='VideoChunk',
+            name="VideoChunk",
             fields=[
-                ('chunk_id', models.AutoField(primary_key=True, serialize=False)),
-                ('video', models.ForeignKey(db_column='video_id', on_delete=django.db.models.deletion.PROTECT, related_name='chunks', to='videos.video')),
+                ("chunk_id", models.AutoField(primary_key=True, serialize=False)),
+                (
+                    "video",
+                    models.ForeignKey(
+                        db_column="video_id",
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="chunks",
+                        to="videos.video",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'video_chunks',
+                "db_table": "video_chunks",
             },
         ),
     ]
