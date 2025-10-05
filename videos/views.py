@@ -127,7 +127,7 @@ def process_video(request):
             
             # Extract audio from original video and save in chunks folder
             video_clip = VideoFileClip(str(full_video_path))
-            audio_clip = video_clip.audio
+            audio_clip = video_clip.audio  
             audio_clip.write_audiofile(str(audio_path), logger=None)
             video_clip.close()
             audio_clip.close()
